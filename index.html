@@ -92,6 +92,8 @@ sup.t-ambience{background:var(--amb)}sup.t-oneshot{background:var(--one)}sup.t-t
 .w[contenteditable=true]{outline:2px solid var(--acc);background:var(--bg)}
 .pz{min-height:26px;padding:0 8px;font-size:13px;border-radius:13px;background:var(--accSoft);border-color:transparent;color:var(--acc);margin:0 4px;vertical-align:middle}
 .empty{color:var(--mut);font-size:16px;line-height:1.6}
+.trbox{display:grid;gap:12px;font-size:16px;line-height:1.5;background:var(--accSoft);border-radius:12px;padding:16px;max-width:640px}
+#txst.err{color:var(--warn);font-weight:700}
 #fxl{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));align-items:start}
 .fxc{border:1px solid var(--line);border-radius:12px;padding:12px;border-inline-start:5px solid var(--one);background:var(--panel)}
 .fxc.t-ambience{border-inline-start-color:var(--amb)}.fxc.t-transition{border-inline-start-color:var(--tr)}
@@ -440,7 +442,8 @@ async function exportMix(kind){if(!narBuf){toast('אין הקלטה');return}sto
 async function setNarration(file){try{const buf=await decode(file);
   if(S.words.length){if(!await confirmBox('להחליף את ההקלטה?','התמלול וההפסקות יימחקו. האפקטים יישארו במקום שלהם בזמן.','החלפה'))return;
     for(const e of S.effects)if(!e.abs){const st=wStart(e);const len=rangeLen(e);e.abs=true;e.at=st;e.len=Math.round(len)}S.words=[];S.pauses=[]}
-  narBlob=file;narBuf=buf;S.narName=file.name;if(S.name==='מדיטציה חדשה')S.name=file.name.replace(/\.[^.]+$/,'');cur=0;sel=null;save();renderAll()}
+  narBlob=file;narBuf=buf;S.narName=file.name;if(S.name==='מדיטציה חדשה')S.name=file.name.replace(/\.[^.]+$/,'');cur=0;sel=null;save();renderAll()
+  if(LS.get('medi.key',''))transcribe()}
   catch(e){toast('לא הצלחתי לקרוא את קובץ השמע')}}
 async function setEffectFile(id,file){const e=S.effects.find(x=>x.id===id);if(!e)return;try{effBuf[id]=await decode(file);effBlob[id]=file;e.file=file.name;save();renderFx();layoutTL();live();toast(`אפקט ${e.n} נטען`)}catch(x){toast('לא הצלחתי לקרוא את הקובץ')}}
 async function b64(blob){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob)})}
@@ -453,17 +456,19 @@ async function importProj(file){try{const o=JSON.parse(await file.text());if(o.a
   cur=0;sel=null;save();renderAll();toast('הפרויקט נפתח')}catch(e){toast('זה לא קובץ פרויקט של הסטודיו')}}
 
 /* ============ תמלול ============ */
-async function transcribe(){const key=LS.get('medi.key','');if(!key){toast('צריך מפתח API של ElevenLabs');openSettings();return}
+function tStat(m,err){for(const id of['#tst','#txst']){const e=$(id);if(e){e.textContent=m;e.className=err?'err':(id==='#txst'?'mut':'')}}}
+async function transcribe(){const ki=$('#txkey');if(ki&&ki.value.trim())LS.set('medi.key',ki.value.trim());const key=LS.get('medi.key','');if(!key){tStat('צריך להדביק קודם את מפתח ה-API',true);ki?ki.focus():openSettings();return}
   if(S.words.length&&!await confirmBox('לתמלל מחדש?','התמלול הנוכחי, ההפסקות והאפקטים שקשורים למילים יימחקו.','תמלול מחדש'))return;
-  const st=$('#tst');st.className='';st.textContent='מתמלל… (בערך דקה לכל 10 דקות הקלטה)';$('#trb').disabled=true;
+  tStat('מתמלל… (בערך דקה לכל 10 דקות הקלטה)');$('#trb').disabled=true;const tg=$('#txgo');if(tg)tg.disabled=true;
   try{const fd=new FormData();fd.append('file',narBlob,S.narName||'audio.mp3');fd.append('model_id',LS.get('medi.model','scribe_v1'));const lang=LS.get('medi.lang','he');if(lang)fd.append('language_code',lang);
     fd.append('timestamps_granularity','word');fd.append('tag_audio_events','false');
     const r=await fetch('https://api.elevenlabs.io/v1/speech-to-text',{method:'POST',headers:{'xi-api-key':key},body:fd});const j=await r.json().catch(()=>({}));
     if(!r.ok){const m=j?.detail?.message||j?.detail||r.statusText;throw new Error(r.status===401?'מפתח ה-API לא תקין':String(typeof m==='string'?m:JSON.stringify(m)))}
     S.words=(j.words||[]).filter(w=>w.type==='word'&&String(w.text).trim()).map(w=>({t:String(w.text).trim(),s:+w.start,e:+w.end}));S.pauses=[];
-    S.effects=S.effects.filter(e=>e.abs);sel=null;st.textContent=`תומללו ${S.words.length} מילים`;save();renderAll()}
-  catch(e){st.className='err';st.textContent='התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור ל-ElevenLabs (אינטרנט או חוסם פרסומות)':e.message)}
-  finally{const b=$('#trb');if(b)b.disabled=false}}
+    if(!S.words.length)throw new Error('לא זוהו מילים בהקלטה. כדאי לבדוק שהשפה בהגדרות נכונה');
+    S.effects=S.effects.filter(e=>e.abs);sel=null;save();renderAll();tStat(`תומללו ${S.words.length} מילים`)}
+  catch(e){tStat('התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור ל-ElevenLabs (אינטרנט, חוסם פרסומות, או שהדפדפן חסם את הפנייה)':e.message),true)}
+  finally{const b=$('#trb');if(b)b.disabled=false;const tg=$('#txgo');if(tg)tg.disabled=false}}
 
 /* ============ רינדור ============ */
 const RH=20,WH=110,WLH=26,FXR=30;
@@ -472,7 +477,10 @@ function renderAll(){const has=!!narBuf;$('#load').hidden=has;$('#studio').hidde
 function renderSrc(){const tw=S.words.length;$('#srcbar').innerHTML=`<span class="nm">${esc(S.narName)}</span><span class="mut">${fmt0(narBuf.duration)}${tw?` · ${tw} מילים`:''}${S.pauses.length?` · ${S.pauses.length} הפסקות`:''}</span>
   <button id="trb" class="${tw?'':'pri'}">${tw?'תמלול מחדש':'תמלול עם ElevenLabs'}</button><span id="tst"></span><span style="flex:1"></span><label class="btn sm ghost">החלפת הקלטה<input type="file" id="rfile" accept="audio/*,.m4a" hidden></label>`}
 function renderTx(){const tx=$('#tx');WT=S.words.map(w=>[mapT(w.s),mapT(w.e)]);
-  if(!S.words.length){tx.innerHTML=`<p class="empty">עדיין אין תמלול. לוחצים על "תמלול עם ElevenLabs" למעלה, והטקסט יופיע כאן עם זמן לכל מילה.<br>אפשר גם בלי תמלול: מזיזים את הסמן על הציר ולוחצים "אפקט בנקודה הנוכחית".</p>`;return}
+  if(!S.words.length){const hasKey=!!LS.get('medi.key','');
+    tx.innerHTML=`<div class="trbox"><b>כאן יופיע כל מה שנאמר בהקלטה, מילה אחרי מילה.</b>
+    ${hasKey?'':`<label>מפתח API של ElevenLabs <small>פעם אחת בלבד. נמצא ב-elevenlabs.io תחת Developers ← API Keys. נשמר רק בדפדפן הזה.</small><input id="txkey" type="password" dir="ltr" autocomplete="off" placeholder="sk_..."></label>`}
+    <div class="row"><button id="txgo" class="pri">תמלול ההקלטה</button><span id="txst" class="mut"></span></div></div>`;return}
   const mk=S.words.map(()=>({c:'',n:''}));
   for(const e of S.effects){if(e.abs)continue;if(e.type==='ambience'){for(let i=e.w0;i<=e.w1&&i<mk.length;i++)mk[i].c+=' m-amb'}else if(mk[e.w0])mk[e.w0].c+=' m-one';if(mk[e.w0])mk[e.w0].n+=`<sup class="t-${e.type}">${e.n}</sup>`}
   const pz={};S.pauses.forEach((p,i)=>{(pz[p.w]=pz[p.w]||[]).push(i)});
@@ -583,7 +591,7 @@ document.addEventListener('drop',e=>{const f=[...(e.dataTransfer?.files||[])].fi
 $('#srcbar').addEventListener('click',e=>{if(e.target.id==='trb')transcribe()});
 $('#srcbar').addEventListener('change',e=>{if(e.target.id==='rfile'){const f=e.target.files[0];if(f)setNarration(f);e.target.value=''}});
 const tx=$('#tx');
-tx.addEventListener('click',ev=>{const pz=ev.target.closest('.pz');if(pz){S.pauses.splice(+pz.dataset.p,1);save();renderAfterTiming();return}
+tx.addEventListener('click',ev=>{if(ev.target.id==='txgo'){transcribe();return}const pz=ev.target.closest('.pz');if(pz){S.pauses.splice(+pz.dataset.p,1);save();renderAfterTiming();return}
   const w=ev.target.closest('.w');if(!w||w.isContentEditable)return;const i=+w.dataset.i;
   if(ev.shiftKey&&sel)sel={a:Math.min(sel.a0,i),b:Math.max(sel.a0,i),a0:sel.a0};else sel={a:i,b:i,a0:i};
   seekTo(WT[sel.a][0]);renderTx();renderSel();layoutTL()});

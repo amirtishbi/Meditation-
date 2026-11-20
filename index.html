@@ -264,10 +264,14 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
 
 <dialog id="setd"><form method="dialog" class="dlg" id="setf">
   <h3>הגדרות</h3>
-  <label>מפתח API של ElevenLabs <small>נשמר רק בדפדפן הזה ונשלח רק ל-ElevenLabs לצורך התמלול. נמצא ב-ElevenLabs תחת Developers ← API Keys.</small><input name="key" type="password" dir="ltr" autocomplete="off"></label>
+  <label>מפתח API של ElevenLabs (רק אם מתמללים דרכם) <small>נשמר רק בדפדפן הזה ונשלח רק ל-ElevenLabs לצורך התמלול. נמצא ב-ElevenLabs תחת Developers ← API Keys.</small><input name="key" type="password" dir="ltr" autocomplete="off"></label>
   <div class="grid2">
     <label>שפת ההקלטה<select name="lang"><option value="he">עברית</option><option value="en">אנגלית</option><option value="">זיהוי אוטומטי</option></select></label>
-    <label>מודל תמלול<select name="model"><option value="scribe_v1">Scribe v1</option><option value="scribe_v2">Scribe v2</option></select></label>
+    <label>מנוע תמלול<select name="engine"><option value="browser">בתוך הדפדפן (חינם)</option><option value="elevenlabs">ElevenLabs</option></select></label>
+  </div>
+  <div class="grid2">
+    <label>מודל בדפדפן<select name="wmodel"><option value="onnx-community/whisper-small_timestamped">Whisper small (מדויק יותר, כבד יותר)</option><option value="onnx-community/whisper-base_timestamped">Whisper base (מהיר, פחות מדויק)</option></select></label>
+    <label>מודל ElevenLabs<select name="model"><option value="scribe_v1">Scribe v1</option><option value="scribe_v2">Scribe v2</option></select></label>
   </div>
   <label>כתובת ברירת מחדל למייל האפקטים<input name="email" type="email" dir="ltr"></label>
   <menu><button value="ok" class="pri">שמירה</button><button value="cancel" formnovalidate class="ghost">ביטול</button></menu>
@@ -443,7 +447,7 @@ async function setNarration(file){try{const buf=await decode(file);
   if(S.words.length){if(!await confirmBox('להחליף את ההקלטה?','התמלול וההפסקות יימחקו. האפקטים יישארו במקום שלהם בזמן.','החלפה'))return;
     for(const e of S.effects)if(!e.abs){const st=wStart(e);const len=rangeLen(e);e.abs=true;e.at=st;e.len=Math.round(len)}S.words=[];S.pauses=[]}
   narBlob=file;narBuf=buf;S.narName=file.name;if(S.name==='מדיטציה חדשה')S.name=file.name.replace(/\.[^.]+$/,'');cur=0;sel=null;save();renderAll()
-  if(LS.get('medi.key',''))transcribe()}
+  if(LS.get('medi.engine','browser')==='elevenlabs'&&LS.get('medi.key',''))transcribe('elevenlabs')}
   catch(e){toast('לא הצלחתי לקרוא את קובץ השמע')}}
 async function setEffectFile(id,file){const e=S.effects.find(x=>x.id===id);if(!e)return;try{effBuf[id]=await decode(file);effBlob[id]=file;e.file=file.name;save();renderFx();layoutTL();live();toast(`אפקט ${e.n} נטען`)}catch(x){toast('לא הצלחתי לקרוא את הקובץ')}}
 async function b64(blob){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob)})}
@@ -457,30 +461,89 @@ async function importProj(file){try{const o=JSON.parse(await file.text());if(o.a
 
 /* ============ תמלול ============ */
 function tStat(m,err){for(const id of['#tst','#txst']){const e=$(id);if(e){e.textContent=m;e.className=err?'err':(id==='#txst'?'mut':'')}}}
-async function transcribe(){const ki=$('#txkey');if(ki&&ki.value.trim())LS.set('medi.key',ki.value.trim());const key=LS.get('medi.key','');if(!key){tStat('צריך להדביק קודם את מפתח ה-API',true);ki?ki.focus():openSettings();return}
+let trBusy=false,trWorker=null;
+function trUI(busy){trBusy=busy;['#trb','#txgo','#txgo2'].forEach(id=>{const b=$(id);if(b)b.disabled=busy});const c=$('#trcancel');if(c)c.hidden=!busy}
+function applyWords(words,final){S.words=words.filter(w=>w.t&&isFinite(w.s)&&isFinite(w.e)).map(w=>({t:w.t,s:Math.max(0,w.s),e:Math.max(w.s,w.e)}));
+  if(final){S.pauses=[];S.effects=S.effects.filter(e=>e.abs);sel=null}
+  renderSrc();renderTx();renderSel();renderFx();layoutTL()}
+async function transcribe(engine){if(trBusy)return;engine=engine||LS.get('medi.engine','browser');LS.set('medi.engine',engine);
+  if(engine==='elevenlabs'){const ki=$('#txkey');if(ki&&ki.value.trim())LS.set('medi.key',ki.value.trim());if(!LS.get('medi.key','')){tStat('צריך להדביק קודם את מפתח ה-API',true);ki?ki.focus():openSettings();return}}
   if(S.words.length&&!await confirmBox('לתמלל מחדש?','התמלול הנוכחי, ההפסקות והאפקטים שקשורים למילים יימחקו.','תמלול מחדש'))return;
-  tStat('מתמלל… (בערך דקה לכל 10 דקות הקלטה)');$('#trb').disabled=true;const tg=$('#txgo');if(tg)tg.disabled=true;
-  try{const fd=new FormData();fd.append('file',narBlob,S.narName||'audio.mp3');fd.append('model_id',LS.get('medi.model','scribe_v1'));const lang=LS.get('medi.lang','he');if(lang)fd.append('language_code',lang);
-    fd.append('timestamps_granularity','word');fd.append('tag_audio_events','false');
-    const r=await fetch('https://api.elevenlabs.io/v1/speech-to-text',{method:'POST',headers:{'xi-api-key':key},body:fd});const j=await r.json().catch(()=>({}));
-    if(!r.ok){const m=j?.detail?.message||j?.detail||r.statusText;throw new Error(r.status===401?'מפתח ה-API לא תקין':String(typeof m==='string'?m:JSON.stringify(m)))}
-    S.words=(j.words||[]).filter(w=>w.type==='word'&&String(w.text).trim()).map(w=>({t:String(w.text).trim(),s:+w.start,e:+w.end}));S.pauses=[];
-    if(!S.words.length)throw new Error('לא זוהו מילים בהקלטה. כדאי לבדוק שהשפה בהגדרות נכונה');
-    S.effects=S.effects.filter(e=>e.abs);sel=null;save();renderAll();tStat(`תומללו ${S.words.length} מילים`)}
-  catch(e){tStat('התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור ל-ElevenLabs (אינטרנט, חוסם פרסומות, או שהדפדפן חסם את הפנייה)':e.message),true)}
-  finally{const b=$('#trb');if(b)b.disabled=false;const tg=$('#txgo');if(tg)tg.disabled=false}}
+  if(S.words.length){S.words=[];S.pauses=[];S.effects=S.effects.filter(e=>e.abs);sel=null;renderAll()}
+  trUI(true);
+  try{const words=engine==='elevenlabs'?await trEleven():await trBrowser();
+    if(!words.length)throw new Error('לא זוהו מילים בהקלטה. כדאי לבדוק שהשפה בהגדרות נכונה');
+    applyWords(words,true);save();tStat(`תומללו ${S.words.length} מילים`)}
+  catch(e){if(e.message==='בוטל'){tStat('התמלול בוטל')}else tStat('התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור (אינטרנט, חוסם פרסומות, או שהדפדפן חסם את הפנייה)':e.message),true)}
+  finally{trUI(false)}}
+async function trEleven(){tStat('מתמלל ב-ElevenLabs… (בערך דקה לכל 10 דקות הקלטה)');
+  const fd=new FormData();fd.append('file',narBlob,S.narName||'audio.mp3');fd.append('model_id',LS.get('medi.model','scribe_v1'));const lang=LS.get('medi.lang','he');if(lang)fd.append('language_code',lang);
+  fd.append('timestamps_granularity','word');fd.append('tag_audio_events','false');
+  const r=await fetch('https://api.elevenlabs.io/v1/speech-to-text',{method:'POST',headers:{'xi-api-key':LS.get('medi.key','')},body:fd});const j=await r.json().catch(()=>({}));
+  if(!r.ok){const m=j?.detail?.message||j?.detail||r.statusText;throw new Error(r.status===401?'מפתח ה-API לא תקין':String(typeof m==='string'?m:JSON.stringify(m)))}
+  return(j.words||[]).filter(w=>w.type==='word'&&String(w.text).trim()).map(w=>({t:String(w.text).trim(),s:+w.start,e:+w.end}))}
+
+/* תמלול בתוך הדפדפן: Whisper דרך transformers.js, בתוך Web Worker */
+const TFJS='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6/dist/transformers.min.js';
+const WORKER_SRC=`
+let pipe=null,curModel='';
+function valid(o,d){const c=o&&o.chunks;if(!c||!c.length)return false;const st=c.map(x=>x.timestamp&&x.timestamp[0]);if(st.some(x=>x==null||!isFinite(x)||x>d+1))return false;
+  const u=new Set(st.map(x=>Math.round(x*10))).size;if(c.length>=2&&u<2)return false;if(st.every(x=>x>=d-0.1))return false;return u>=Math.min(3,Math.ceil(c.length*0.5))}
+function spread(out,d,off,words){const cs=(out.chunks&&out.chunks.length)?out.chunks:[{text:out.text||'',timestamp:[0,d]}];
+  for(const c of cs){const ws=String(c.text||'').trim().split(/\\s+/).filter(Boolean);if(!ws.length)continue;const s0=(c.timestamp&&c.timestamp[0])||0,e0=(c.timestamp&&c.timestamp[1]!=null)?c.timestamp[1]:d;
+    const tot=ws.reduce((x,w)=>x+w.length+1,0);let acc=0;for(const w of ws){const s=s0+(e0-s0)*acc/tot;acc+=w.length+1;words.push({t:w,s:off+s,e:off+s0+(e0-s0)*acc/tot})}}}
+self.onmessage=async ev=>{const m=ev.data;try{
+  const T=await import(m.lib);T.env.allowLocalModels=false;
+  if(!pipe||curModel!==m.model){let lastErr=null;
+    for(const dt of ['q8','q4','fp16']){try{pipe=await T.pipeline('automatic-speech-recognition',m.model,{dtype:dt,device:'wasm',
+      progress_callback:p=>{if(p.status==='progress'&&p.total)postMessage({type:'dl',file:p.file,loaded:p.loaded,total:p.total})}});lastErr=null;break}catch(e){lastErr=e}}
+    if(lastErr)throw lastErr;curModel=m.model}
+  const words=[];const SR=16000;
+  for(let i=0;i<m.chunks.length;i++){const a=m.chunks[i][0],b=m.chunks[i][1];const seg=m.audio.subarray(a,b),d=seg.length/SR,off=a/SR;
+    postMessage({type:'chunk',i:i,n:m.chunks.length});
+    const opt={task:'transcribe',return_timestamps:'word'};if(m.lang)opt.language=m.lang;
+    let out=null,ok=false;try{out=await pipe(seg,opt);ok=valid(out,d)}catch(e){}
+    if(ok){for(const c of out.chunks){const t=String(c.text||'').trim();if(!t)continue;const s=c.timestamp[0],e=(c.timestamp[1]!=null)?c.timestamp[1]:s+0.3;words.push({t:t,s:off+s,e:off+Math.max(s,e)})}}
+    else{const o2=Object.assign({},opt,{return_timestamps:true});const out2=await pipe(seg,o2);spread(out2,d,off,words)}
+    postMessage({type:'partial',words:words})}
+  postMessage({type:'done',words:words})}catch(e){postMessage({type:'error',msg:String((e&&e.message)||e)})}};`;
+async function audio16k(){const sr=16000,n=Math.ceil(narBuf.duration*sr);const c=new OfflineAudioContext(1,n,sr);const s=c.createBufferSource();s.buffer=narBuf;s.connect(c.destination);s.start();return(await c.startRendering()).getChannelData(0)}
+function cutChunks(x){const SR=16000,F=1600,out=[];let a=0;
+  while(a<x.length){if(x.length-a<=29*SR){out.push([a,x.length]);break}
+    let best=a+28*SR,bestE=Infinity;for(let p=a+22*SR;p<a+29*SR-F;p+=F){let e=0;for(let i=p;i<p+F;i+=4)e+=x[i]*x[i];if(e<bestE){bestE=e;best=p+F/2}}
+    out.push([a,best]);a=best}
+  return out}
+function trBrowser(){return new Promise(async(res,rej)=>{
+  tStat('מכין את ההקלטה…');let x;try{x=await audio16k()}catch(e){rej(new Error('לא הצלחתי לעבד את ההקלטה'));return}
+  const chunks=cutChunks(x);const langMap={he:'hebrew',en:'english'};const lang=langMap[LS.get('medi.lang','he')]||null;
+  if(!trWorker)trWorker=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'})),{type:'module'});
+  const files={};let started=Date.now();
+  trWorker.onmessage=ev=>{const m=ev.data;
+    if(m.type==='dl'){files[m.file]=m;let L=0,T=0;for(const k in files){L+=files[k].loaded;T+=files[k].total}tStat(`מוריד את מודל התמלול (פעם ראשונה בלבד)… ${Math.round(L/1e6)} מתוך ${Math.round(T/1e6)} MB`)}
+    if(m.type==='chunk'){if(m.i===0)started=Date.now();const el=(Date.now()-started)/1000,left=m.i?Math.round(el/m.i*(m.n-m.i)/60):null;tStat(`מתמלל קטע ${m.i+1} מתוך ${m.n}`+(left!=null?` · נשארו בערך ${left<1?'פחות מדקה':left+' דק׳'}`:''))}
+    if(m.type==='partial')applyWords(m.words,false);
+    if(m.type==='done'){trWorker.onmessage=null;res(m.words)}
+    if(m.type==='error'){trWorker.terminate();trWorker=null;rej(new Error(/fetch|network|Failed/i.test(m.msg)?'לא הצלחתי להוריד את מודל התמלול. צריך חיבור לאינטרנט בפעם הראשונה':m.msg))}};
+  trWorker.onerror=e=>{try{trWorker.terminate()}catch(_){}trWorker=null;rej(new Error('הדפדפן לא הצליח להפעיל את התמלול'+(e.message?': '+e.message:'')))};
+  trCancel=()=>{try{trWorker.terminate()}catch(_){}trWorker=null;rej(new Error('בוטל'))};
+  trWorker.postMessage({lib:TFJS,model:LS.get('medi.wmodel','onnx-community/whisper-small_timestamped'),lang,audio:x,chunks})})}
+let trCancel=()=>{};
 
 /* ============ רינדור ============ */
 const RH=20,WH=110,WLH=26,FXR=30;
 function renderAll(){const has=!!narBuf;$('#load').hidden=has;$('#studio').hidden=!has;$('#bar').hidden=!has;$('#pname').value=S.name;$('#nv').value=S.narVol;$('#nrm').checked=!!S.normalize;
   if(!has)return;renderSrc();renderTx();renderSel();renderFx();layoutTL();updTime()}
 function renderSrc(){const tw=S.words.length;$('#srcbar').innerHTML=`<span class="nm">${esc(S.narName)}</span><span class="mut">${fmt0(narBuf.duration)}${tw?` · ${tw} מילים`:''}${S.pauses.length?` · ${S.pauses.length} הפסקות`:''}</span>
-  <button id="trb" class="${tw?'':'pri'}">${tw?'תמלול מחדש':'תמלול עם ElevenLabs'}</button><span id="tst"></span><span style="flex:1"></span><label class="btn sm ghost">החלפת הקלטה<input type="file" id="rfile" accept="audio/*,.m4a" hidden></label>`}
+  <button id="trb" class="${tw?'':'pri'}">${tw?'תמלול מחדש':'תמלול'}</button><span class="mut" style="font-size:13px">${LS.get('medi.engine','browser')==='elevenlabs'?'ElevenLabs':'בתוך הדפדפן'}</span><button id="trcancel" class="sm ghost" hidden>ביטול</button><span id="tst"></span><span style="flex:1"></span><label class="btn sm ghost">החלפת הקלטה<input type="file" id="rfile" accept="audio/*,.m4a" hidden></label>`}
 function renderTx(){const tx=$('#tx');WT=S.words.map(w=>[mapT(w.s),mapT(w.e)]);
   if(!S.words.length){const hasKey=!!LS.get('medi.key','');
     tx.innerHTML=`<div class="trbox"><b>כאן יופיע כל מה שנאמר בהקלטה, מילה אחרי מילה.</b>
-    ${hasKey?'':`<label>מפתח API של ElevenLabs <small>פעם אחת בלבד. נמצא ב-elevenlabs.io תחת Developers ← API Keys. נשמר רק בדפדפן הזה.</small><input id="txkey" type="password" dir="ltr" autocomplete="off" placeholder="sk_..."></label>`}
-    <div class="row"><button id="txgo" class="pri">תמלול ההקלטה</button><span id="txst" class="mut"></span></div></div>`;return}
+    <div class="row"><button id="txgo" class="pri">תמלול בתוך הדפדפן</button><span class="mut" style="font-size:14px">חינם, בלי מפתח, הקובץ לא יוצא מהמחשב</span></div>
+    <small>בפעם הראשונה יורד מודל תמלול (כמה מאות MB) ונשמר בדפדפן. התמלול עצמו לוקח כמה דקות, תלוי באורך ההקלטה ובמהירות המחשב.</small>
+    <details${LS.get('medi.engine','browser')==='elevenlabs'?' open':''}><summary style="cursor:pointer;font-weight:700;color:var(--acc)">או עם ElevenLabs (מהיר ומדויק יותר)</summary><div style="display:grid;gap:10px;margin-top:10px">
+    ${hasKey?'':`<label>מפתח API של ElevenLabs <small>נמצא ב-elevenlabs.io תחת Developers ← API Keys. נשמר רק בדפדפן הזה.</small><input id="txkey" type="password" dir="ltr" autocomplete="off" placeholder="sk_..."></label>`}
+    <div><button id="txgo2">תמלול עם ElevenLabs</button></div></div></details>
+    <div class="row"><span id="txst" class="mut"></span></div></div>`;return}
   const mk=S.words.map(()=>({c:'',n:''}));
   for(const e of S.effects){if(e.abs)continue;if(e.type==='ambience'){for(let i=e.w0;i<=e.w1&&i<mk.length;i++)mk[i].c+=' m-amb'}else if(mk[e.w0])mk[e.w0].c+=' m-one';if(mk[e.w0])mk[e.w0].n+=`<sup class="t-${e.type}">${e.n}</sup>`}
   const pz={};S.pauses.forEach((p,i)=>{(pz[p.w]=pz[p.w]||[]).push(i)});
@@ -579,8 +642,8 @@ $('#mcp').onclick=async()=>toast(await copyText($('#mbody').value)?'המייל �
 $('#mcl').onclick=()=>$('#mld').close();
 
 /* ============ הגדרות ============ */
-function openSettings(){const F=$('#setf').elements;F.key.value=LS.get('medi.key','');F.lang.value=LS.get('medi.lang','he');F.model.value=LS.get('medi.model','scribe_v1');F.email.value=LS.get('medi.email','');const d=$('#setd');d.returnValue='';d.showModal()}
-$('#setd').addEventListener('close',()=>{if($('#setd').returnValue!=='ok')return;const F=$('#setf').elements;LS.set('medi.key',F.key.value.trim());LS.set('medi.lang',F.lang.value);LS.set('medi.model',F.model.value);LS.set('medi.email',F.email.value.trim());toast('ההגדרות נשמרו')});
+function openSettings(){const F=$('#setf').elements;F.key.value=LS.get('medi.key','');F.lang.value=LS.get('medi.lang','he');F.model.value=LS.get('medi.model','scribe_v1');F.engine.value=LS.get('medi.engine','browser');F.wmodel.value=LS.get('medi.wmodel','onnx-community/whisper-small_timestamped');F.email.value=LS.get('medi.email','');const d=$('#setd');d.returnValue='';d.showModal()}
+$('#setd').addEventListener('close',()=>{if($('#setd').returnValue!=='ok')return;const F=$('#setf').elements;LS.set('medi.key',F.key.value.trim());LS.set('medi.lang',F.lang.value);LS.set('medi.model',F.model.value);LS.set('medi.engine',F.engine.value);LS.set('medi.wmodel',F.wmodel.value);if(narBuf)renderSrc();LS.set('medi.email',F.email.value.trim());toast('ההגדרות נשמרו')});
 $('#setb').onclick=openSettings;
 
 /* ============ אירועים ============ */
@@ -588,10 +651,10 @@ $('#nfile').onchange=e=>{const f=e.target.files[0];if(f)setNarration(f);e.target
 const drop=$('#drop');['dragenter','dragover'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();if(!narBuf)drop.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
 document.addEventListener('drop',e=>{const f=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('audio')||/\.(mp3|wav|m4a|ogg|aac)$/i.test(f.name));if(f&&!narBuf)setNarration(f)});
-$('#srcbar').addEventListener('click',e=>{if(e.target.id==='trb')transcribe()});
+$('#srcbar').addEventListener('click',e=>{if(e.target.id==='trb')transcribe();if(e.target.id==='trcancel')trCancel()});
 $('#srcbar').addEventListener('change',e=>{if(e.target.id==='rfile'){const f=e.target.files[0];if(f)setNarration(f);e.target.value=''}});
 const tx=$('#tx');
-tx.addEventListener('click',ev=>{if(ev.target.id==='txgo'){transcribe();return}const pz=ev.target.closest('.pz');if(pz){S.pauses.splice(+pz.dataset.p,1);save();renderAfterTiming();return}
+tx.addEventListener('click',ev=>{if(ev.target.id==='txgo'){transcribe('browser');return}if(ev.target.id==='txgo2'){transcribe('elevenlabs');return}const pz=ev.target.closest('.pz');if(pz){S.pauses.splice(+pz.dataset.p,1);save();renderAfterTiming();return}
   const w=ev.target.closest('.w');if(!w||w.isContentEditable)return;const i=+w.dataset.i;
   if(ev.shiftKey&&sel)sel={a:Math.min(sel.a0,i),b:Math.max(sel.a0,i),a0:sel.a0};else sel={a:i,b:i,a0:i};
   seekTo(WT[sel.a][0]);renderTx();renderSel();layoutTL()});

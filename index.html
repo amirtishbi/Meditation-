@@ -55,7 +55,7 @@ main{padding:18px max(3vw,16px)}
 .srcbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
 .srcbar .nm{font-weight:700}
 #tst{font-size:14px;color:var(--mut)}#tst.err{color:var(--warn);font-weight:600}
-.tlw{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.tlw{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 0 0;overflow:hidden}
 #sc{overflow-x:auto;overflow-y:hidden;position:relative}
 #inner{position:relative;min-height:200px;cursor:text}
 #cv{position:absolute;top:0;left:0;pointer-events:none}
@@ -72,13 +72,14 @@ main{padding:18px max(3vw,16px)}
 #ph{position:absolute;top:0;bottom:0;width:2px;background:var(--acc);pointer-events:none;left:0}
 .tlhint{font-size:13px;color:var(--mut);padding:6px 12px;border-top:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap}
 .lg{display:inline-flex;align-items:center;gap:5px}.lg i{width:12px;height:12px;border-radius:3px;display:inline-block}
-.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.txc{border-top-left-radius:0;border-top-right-radius:0;border-top:0;margin-top:-1px}
 .colh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 #selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--accSoft);border-radius:10px;padding:8px 10px;margin-bottom:10px}
 #selbar[hidden]{display:none}
 #selbar .q{font-weight:700}#selbar .tm{font-variant-numeric:tabular-nums;color:var(--mut)}
 .pzc{display:inline-flex;gap:4px;align-items:center;font-size:14px}
-#tx{font-size:19px;line-height:2.05;max-height:58vh;overflow-y:auto;position:relative;padding-inline-end:6px}
+#tx{font-size:19px;line-height:2.05;max-height:42vh;overflow-y:auto;position:relative;padding-inline-end:6px}
 .w{border-radius:5px;padding:1px 2px;cursor:pointer;position:relative}
 .w:hover{background:var(--accSoft)}
 .w.s{background:var(--acc);color:var(--accInk)}
@@ -91,7 +92,7 @@ sup.t-ambience{background:var(--amb)}sup.t-oneshot{background:var(--one)}sup.t-t
 .w[contenteditable=true]{outline:2px solid var(--acc);background:var(--bg)}
 .pz{min-height:26px;padding:0 8px;font-size:13px;border-radius:13px;background:var(--accSoft);border-color:transparent;color:var(--acc);margin:0 4px;vertical-align:middle}
 .empty{color:var(--mut);font-size:16px;line-height:1.6}
-#fxl{display:grid;gap:12px}
+#fxl{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));align-items:start}
 .fxc{border:1px solid var(--line);border-radius:12px;padding:12px;border-inline-start:5px solid var(--one);background:var(--panel)}
 .fxc.t-ambience{border-inline-start-color:var(--amb)}.fxc.t-transition{border-inline-start-color:var(--tr)}
 .fxc.hl{box-shadow:0 0 0 3px var(--accSoft)}
@@ -199,12 +200,12 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
       <div id="sc" dir="ltr"><div id="inner"><canvas id="cv"></canvas><div id="wl"></div><div id="fl"></div><div id="ph"></div></div></div>
       <div class="tlhint"><span>לחיצה על הציר: קפיצה לנקודה · גרירת אפקט: הזזה בזמן</span><span class="lg"><i style="background:var(--amb)"></i>רקע מתמשך</span><span class="lg"><i style="background:var(--one)"></i>צליל נקודתי</span><span class="lg"><i style="background:var(--tr)"></i>מעבר</span><span class="lg"><i style="background:var(--accSoft)"></i>הפסקה</span></div>
     </div>
-    <div class="cols">
-      <section class="card">
+    <section class="card txc">
         <div class="colh"><h2>הטקסט</h2><small>לחיצה על מילה בוחרת אותה · Shift+לחיצה בוחרת טווח · לחיצה כפולה מתקנת מילה</small></div>
         <div id="selbar" hidden></div>
         <div id="tx"></div>
-      </section>
+    </section>
+    <div class="cols">
       <aside class="card">
         <div class="colh"><h2>אפקטים</h2>
           <div class="row"><button id="addAt" class="sm">אפקט בנקודה הנוכחית</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label></div></div>

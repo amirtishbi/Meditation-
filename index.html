@@ -57,6 +57,22 @@ main{padding:18px max(3vw,16px)}
 #tst{font-size:14px;color:var(--mut)}#tst.err{color:var(--warn);font-weight:600}
 .tlw{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 0 0;overflow:hidden}
 #sc{overflow-x:auto;overflow-y:hidden;position:relative}
+.tlg{display:grid;grid-template-columns:128px minmax(0,1fr)}
+#lanes{position:relative;border-inline-end:1px solid var(--line);background:var(--bg)}
+.lane{position:absolute;inset-inline:0;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);overflow:hidden}
+.lane span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.lane button{min-height:24px;padding:0 6px;font-size:11.5px;border-radius:6px}
+.lane button.on{background:var(--oneSoft);border-color:var(--one);color:var(--one)}
+.lane.off span{opacity:.45;text-decoration:line-through}
+.lsep{position:absolute;left:0;right:0;border-top:1px solid var(--line);pointer-events:none}
+.lyl{display:grid;gap:8px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.ly{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto auto;gap:10px;align-items:center}
+.ly input[type=text]{font-weight:700;padding:5px 8px}
+.ly label{flex-direction:row;align-items:center;gap:6px;font-size:13px}
+.ly .cnt{font-size:12.5px;color:var(--mut);white-space:nowrap}
+.lyh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.lyh b{font-size:15px}
+@media(max-width:700px){.ly{grid-template-columns:1fr 1fr}}
 #inner{position:relative;min-height:200px;cursor:text}
 #cv{position:absolute;top:0;left:0;pointer-events:none}
 #wl{position:absolute;left:0;right:0;height:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -199,8 +215,8 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
   <section id="studio" hidden>
     <div class="srcbar" id="srcbar"></div>
     <div class="tlw">
-      <div id="sc" dir="ltr"><div id="inner"><canvas id="cv"></canvas><div id="wl"></div><div id="fl"></div><div id="ph"></div></div></div>
-      <div class="tlhint"><span>לחיצה על הציר: קפיצה לנקודה · גרירת אפקט: הזזה בזמן</span><span class="lg"><i style="background:var(--amb)"></i>רקע מתמשך</span><span class="lg"><i style="background:var(--one)"></i>צליל נקודתי</span><span class="lg"><i style="background:var(--tr)"></i>מעבר</span><span class="lg"><i style="background:var(--accSoft)"></i>הפסקה</span></div>
+      <div class="tlg"><div id="lanes"></div><div id="sc" dir="ltr"><div id="inner"><canvas id="cv"></canvas><div id="wl"></div><div id="fl"></div><div id="ph"></div></div></div></div>
+      <div class="tlhint"><span>הזמן רץ מימין לשמאל · לחיצה על הציר: קפיצה לנקודה · גרירת אפקט: הזזה בזמן</span><span class="lg"><i style="background:var(--amb)"></i>רקע מתמשך</span><span class="lg"><i style="background:var(--one)"></i>צליל נקודתי</span><span class="lg"><i style="background:var(--tr)"></i>מעבר</span><span class="lg"><i style="background:var(--accSoft)"></i>הפסקה</span></div>
     </div>
     <section class="card txc">
         <div class="colh"><h2>הטקסט</h2><small>לחיצה על מילה בוחרת אותה · Shift+לחיצה בוחרת טווח · לחיצה כפולה מתקנת מילה</small></div>
@@ -210,7 +226,8 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
     <div class="cols">
       <aside class="card">
         <div class="colh"><h2>אפקטים</h2>
-          <div class="row"><button id="addAt" class="sm">אפקט בנקודה הנוכחית</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label></div></div>
+          <div class="row"><button id="addBg" class="sm pri">רקע עדין לכל המדיטציה</button><button id="addAt" class="sm">אפקט בנקודה הנוכחית</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label></div></div>
+        <div class="lyl" id="lyl"></div>
         <div id="fxl"></div>
       </aside>
     </div>
@@ -245,6 +262,7 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
     <label class="opt"><input type="radio" name="intensity" value="present">נוכח אבל עדין</label>
   </fieldset>
   <label>תיאור הצליל באנגלית <small>הבסיס של הפרומפט: מה מקור הצליל, על מה, מאיזה מרחק. הכלי מוסיף לבד את שאר ההנחיות.</small><textarea name="en" rows="2" dir="ltr"></textarea></label>
+  <label>שכבה<select name="layer" id="fxlayer"></select></label>
   <div class="grid2">
     <label id="durL">משך לייצור (שניות)<input name="dur" type="number" min="0.5" max="30" step="0.5"></label>
     <label id="lenL">אורך הרקע בקובץ הסופי (שניות)<input name="len" type="number" min="2" max="900" step="1"></label>
@@ -325,7 +343,11 @@ function detect(a,b){const ws=S.words.slice(Math.max(0,a-2),b+3).map(w=>norm(w.t
   return DICT.filter(d=>d.k.some(k=>ws.some(w=>k.length<=2?(w===k||strip(w)===k):(w.includes(k)))))}
 
 /* ============ מצב ============ */
-const blank=()=>({id:uid(),name:'מדיטציה חדשה',words:[],pauses:[],effects:[],nextN:1,narVol:1,normalize:true,pps:50,narName:''});
+const LAYERS0=()=>[{id:'bg',name:'רקע עדין',vol:1,mute:false},{id:'fx',name:'אפקטים',vol:1,mute:false}];
+const blank=()=>({id:uid(),name:'מדיטציה חדשה',layers:LAYERS0(),words:[],pauses:[],effects:[],nextN:1,narVol:1,normalize:true,pps:50,narName:''});
+function migrate(){if(!Array.isArray(S.layers)||!S.layers.length)S.layers=LAYERS0();const ids=S.layers.map(l=>l.id);
+  for(const e of S.effects)if(!ids.includes(e.layer))e.layer=(e.type==='ambience'&&ids.includes('bg'))?'bg':(ids.includes('fx')?'fx':ids[0])}
+function layerOf(e){return S.layers.find(l=>l.id===e.layer)||S.layers[0]}
 let S=blank(),narBlob=null,narBuf=null,effBlob={},effBuf={},cur=0,sel=null,hl=null,WT=[];
 let _ac=null;const ac=()=>_ac||(_ac=new (window.AudioContext||window.webkitAudioContext)());
 async function decode(b){const ab=await b.arrayBuffer();return await ac().decodeAudioData(ab)}
@@ -340,7 +362,7 @@ function save(){clearTimeout(saveT);setStat('שומר…');saveT=setTimeout(asyn
 async function refreshList(){try{const all=(await idb('readonly',s=>s.getAll()))||[];all.sort((a,b)=>b.updated-a.updated);const L=$('#plist');
   L.innerHTML=(all.some(p=>p.id===S.id)?'':`<option value="${S.id}">${esc(S.name)}</option>`)+all.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');L.value=S.id}catch(e){}}
 async function load(id){stop();const r=await idb('readonly',s=>s.get(id));if(!r)return;
-  S=Object.assign(blank(),JSON.parse(r.state));narBlob=r.nar||null;effBlob=r.effs||{};narBuf=null;effBuf={};cur=0;sel=null;hl=null;
+  S=Object.assign(blank(),JSON.parse(r.state));migrate();narBlob=r.nar||null;effBlob=r.effs||{};narBuf=null;effBuf={};cur=0;sel=null;hl=null;
   try{if(narBlob)narBuf=await decode(narBlob)}catch(e){toast('לא הצלחתי לפתוח את ההקלטה השמורה')}
   for(const k in effBlob){try{effBuf[k]=await decode(effBlob[k])}catch(e){}}
   LS.set('medi.last',S.id);renderAll();refreshList()}
@@ -350,7 +372,8 @@ function pts(){return S.pauses.map(p=>({at:S.words[p.w]?.e,sec:+p.sec||0})).filt
 function mapT(t){let d=0;for(const p of pts())if(p.at<t-1e-4)d+=p.sec;return t+d}
 function segs(){if(!narBuf)return[];const out=[];let s=0,acc=0;for(const p of pts()){if(p.at>s){out.push({s,e:p.at,o:s+acc});s=p.at}acc+=p.sec}out.push({s,e:narBuf.duration,o:s+acc});return out.filter(x=>x.e>x.s)}
 function wStart(e){return e.abs?(+e.at||0):mapT(S.words[e.w0]?.s??0)}
-function rangeLen(e){if(e.abs)return +e.len||20;return mapT(S.words[e.w1]?.e??0)-mapT(S.words[e.w0]?.s??0)+(+e.tail||2)}
+function narEnd(){return narBuf?narBuf.duration+pts().reduce((a,p)=>a+p.sec,0):0}
+function rangeLen(e){if(e.full)return Math.max(5,narEnd()+4-(+e.at||0));if(e.abs)return +e.len||20;return mapT(S.words[e.w1]?.e??0)-mapT(S.words[e.w0]?.s??0)+(+e.tail||2)}
 function span(e){const b=effBuf[e.id];const st=Math.max(0,wStart(e)+(+e.off||0));
   const en=e.type==='ambience'?st+rangeLen(e):st+(b?b.duration:(+e.dur||3));return[st,en]}
 function total(withPlan){let t=narBuf?narBuf.duration+pts().reduce((a,p)=>a+p.sec,0):0;
@@ -393,7 +416,7 @@ function ctxWords(e){if(e.abs||!S.words.length)return'';const W=S.words;const a=
 
 /* ============ אודיו: תזמון, נגינה, ייצוא ============ */
 function chain(c){const m=c.createGain();const k=c.createDynamicsCompressor();k.threshold.value=-3;k.knee.value=0;k.ratio.value=20;k.attack.value=.003;k.release.value=.25;m.connect(k);k.connect(c.destination);return m}
-function envPts(e,st,en){const v=+e.vol,fi=Math.max(0,+e.fi||0),fo=Math.max(0,+e.fo||0);
+function envPts(e,st,en){const v=(+e.vol)*(+(layerOf(e).vol??1)),fi=Math.max(0,+e.fi||0),fo=Math.max(0,+e.fo||0);
   const fade=t=>{let f=1;if(fi>0&&t<st+fi)f=Math.min(f,(t-st)/fi);if(fo>0&&t>en-fo)f=Math.min(f,(en-t)/fo);return Math.max(0,Math.min(1,f))};
   const dl=e.type==='ambience'&&e.duck?0.45:1;const sp=dl<1?speech().filter(([a,b])=>b>st-1&&a<en+1):[];
   const duck=t=>{let m=1;for(const[a,b]of sp){let f;if(t<a-0.5||t>b+1)f=1;else if(t<a-0.1)f=1-(1-dl)*((t-(a-0.5))/0.4);else if(t<=b+0.2)f=dl;else f=dl+(1-dl)*((t-(b+0.2))/0.8);m=Math.min(m,f)}return m};
@@ -402,7 +425,7 @@ function envPts(e,st,en){const v=+e.vol,fi=Math.max(0,+e.fi||0),fo=Math.max(0,+e
 function sched(c,out,when,from){const N=[];const at=t=>when+Math.max(0,t-from);
   if(narBuf){const g=c.createGain();g.gain.value=+S.narVol;g.connect(out);
     for(const sg of segs()){const len=sg.e-sg.s;if(sg.o+len<=from)continue;const skip=Math.max(0,from-sg.o);const src=c.createBufferSource();src.buffer=narBuf;src.connect(g);src.start(at(sg.o),sg.s+skip,len-skip);N.push(src)}}
-  for(const e of S.effects){const b=effBuf[e.id];if(!b||e.mute)continue;const[st,en]=span(e);if(en<=from)continue;
+  for(const e of S.effects){const b=effBuf[e.id];if(!b||e.mute||layerOf(e).mute)continue;const[st,en]=span(e);if(en<=from)continue;
     const loop=e.type==='ambience'&&e.loop;let off=Math.max(0,from-st);if(!loop&&off>=b.duration)continue;if(loop)off%=b.duration;
     const src=c.createBufferSource();src.buffer=b;src.loop=loop;const g=c.createGain();src.connect(g);g.connect(out);
     const P=envPts(e,st,en);const t0=Math.max(st,from);
@@ -418,7 +441,7 @@ function stop(){if(!playing)return;cur=pos();playing.nodes.forEach(n=>{try{n.sto
 let liveT;function live(){clearTimeout(liveT);liveT=setTimeout(()=>{if(playing){const p=pos();stop();cur=p;play()}},160)}
 function seekTo(t){const was=!!playing;if(was)stop();cur=Math.max(0,t);placePH();hiNow(cur);if(was)play()}
 function tick(){if(!playing)return;const p=pos();if(p>=total(false)+0.1){stop();cur=0;placePH();return}
-  placePH(p);hiNow(p);const x=p*S.pps,sc=$('#sc');if(x>sc.scrollLeft+sc.clientWidth-40||x<sc.scrollLeft)sc.scrollLeft=x-60;requestAnimationFrame(tick)}
+  placePH(p);hiNow(p);const x=X(p),sc=$('#sc'),w=sc.clientWidth;if(x<sc.scrollLeft+40||x>sc.scrollLeft+w)sc.scrollLeft=x-w+60;requestAnimationFrame(tick)}
 async function renderMix(){const T=total(false),sr=44100;const c=new OfflineAudioContext(2,Math.ceil(T*sr)+sr,sr);sched(c,chain(c),0,0);const b=await c.startRendering();
   if(S.normalize){let pk=0;for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
     if(pk>0){const g=Math.min(4,0.89/pk);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]*=g}}}
@@ -451,7 +474,7 @@ async function exportProj(){setStat('מכין קובץ…');const o={app:'medita
   for(const k in effBlob)o.effs[k]={name:effBlob[k].name||'fx',d:await b64(effBlob[k])};dl(new Blob([JSON.stringify(o)],{type:'application/json'}),safe(S.name)+'.meditation.json');setStat('נשמר לקובץ')}
 async function importProj(file){try{const o=JSON.parse(await file.text());if(o.app!=='meditation-studio')throw new Error('x');stop();
   const fromD=async x=>{const r=await fetch(x.d);const b=await r.blob();return new File([b],x.name,{type:b.type})};
-  S=Object.assign(blank(),o.state,{id:uid()});narBlob=o.nar?await fromD(o.nar):null;narBuf=narBlob?await decode(narBlob):null;effBlob={};effBuf={};
+  S=Object.assign(blank(),o.state,{id:uid()});migrate();narBlob=o.nar?await fromD(o.nar):null;narBuf=narBlob?await decode(narBlob):null;effBlob={};effBuf={};
   for(const k in o.effs||{}){effBlob[k]=await fromD(o.effs[k]);try{effBuf[k]=await decode(effBlob[k])}catch(e){}}
   cur=0;sel=null;save();renderAll();toast('הפרויקט נפתח')}catch(e){toast('זה לא קובץ פרויקט של הסטודיו')}}
 
@@ -484,7 +507,7 @@ async function trEleven(){tStat('מתמלל ב-ElevenLabs… (בערך דקה ל
 /* ============ רינדור ============ */
 const RH=20,WH=110,WLH=26,FXR=30;
 function renderAll(){const has=!!narBuf;$('#load').hidden=has;$('#studio').hidden=!has;$('#bar').hidden=!has;$('#pname').value=S.name;$('#nv').value=S.narVol;$('#nrm').checked=!!S.normalize;
-  if(!has)return;renderSrc();renderTx();renderSel();renderFx();layoutTL();updTime()}
+  if(!has)return;renderSrc();renderTx();renderSel();renderLayers();renderFx();layoutTL(true);updTime()}
 function renderSrc(){const tw=S.words.length;$('#srcbar').innerHTML=`<span class="nm">${esc(S.narName)}</span><span class="mut">${fmt0(narBuf.duration)}${tw?` · ${tw} מילים`:''}${S.pauses.length?` · ${S.pauses.length} הפסקות`:''}</span>
   <button id="trb" class="${tw?'':'pri'}">${tw?'תמלול מחדש':'תמלול עם ElevenLabs'}</button><span id="tst"></span><span style="flex:1"></span><label class="btn sm ghost">החלפת הקלטה<input type="file" id="rfile" accept="audio/*,.m4a" hidden></label>`}
 function renderTx(){const tx=$('#tx');WT=S.words.map(w=>[mapT(w.s),mapT(w.e)]);
@@ -503,41 +526,61 @@ function renderSel(){const b=$('#selbar');if(!sel||!S.words.length){b.hidden=tru
    <span class="pzc">הפסקה אחרי: ${[2,3,5,8].map(s=>`<button data-a="pz" data-s="${s}" class="sm${ex&&+ex.sec===s?' pri':''}">${s} ש׳</button>`).join('')}</span><button data-a="x" class="ghost sm">ביטול בחירה</button>`}
 function cardHTML(e){const[st,en]=span(e),has=!!effBuf[e.id],amb=e.type==='ambience',g=gen(e);
   return `<article class="fxc t-${e.type}${hl===e.id?' hl':''}" data-id="${e.id}">
-  <header><span class="num">${e.n}</span><div><b>${esc(e.label)}</b><small>${TN[e.type]} · ${fmt0(st)}${amb?'–'+fmt0(en):''}</small></div><span class="chip ${has?'ok':'wait'}">${has?'מוכן':'ממתין לקובץ'}</span></header>
+  <header><span class="num">${e.n}</span><div><b>${esc(e.label)}</b><small>${TN[e.type]} · שכבת ${esc(layerOf(e).name)} · ${fmt0(st)}${amb?'–'+fmt0(en):''}</small></div><span class="chip ${has?'ok':'wait'}">${has?'מוכן':'ממתין לקובץ'}</span></header>
   <div class="pr"><code>${esc(buildPrompt(e))}</code><span class="gs">משך ${g.dur} ש׳ · Prompt influence ${g.infl} · Loop ${g.loop?'כן':'לא'} · שם קובץ: <span dir="ltr" style="white-space:nowrap">${esc(fname(e))}</span></span><div class="row"><button data-a="copy" class="sm">העתקת פרומפט</button></div></div>
   <div class="row"><label class="btn sm">${has?'החלפת קובץ':'העלאת קובץ'}<input type="file" accept="audio/*" data-a="file" hidden></label>${has?`<span class="fn">${esc(e.file||'')}</span>`:''}</div>
   <div class="ctl">
+   <label>שכבה<select data-k="layer">${S.layers.map(l=>`<option value="${l.id}"${layerOf(e)===l?' selected':''}>${esc(l.name)}</option>`).join('')}</select></label>
    <label>עוצמה <input type="range" min="0" max="1.5" step="0.05" value="${e.vol}" data-k="vol"><output>${Math.round(e.vol*100)}%</output></label>
    <label>כניסה הדרגתית (ש׳)<input type="number" min="0" max="15" step="0.5" value="${e.fi}" data-k="fi"></label>
    <label>יציאה הדרגתית (ש׳)<input type="number" min="0" max="15" step="0.5" value="${e.fo}" data-k="fo"></label>
    <label>הזזה בזמן (ש׳)<input type="number" min="-30" max="30" step="0.1" value="${e.off}" data-k="off"></label>
-   ${amb&&e.abs?`<label>אורך (ש׳)<input type="number" min="2" max="900" step="1" value="${e.len}" data-k="len"></label>`:''}
+   ${amb&&e.abs&&!e.full?`<label>אורך (ש׳)<input type="number" min="2" max="900" step="1" value="${e.len}" data-k="len"></label>`:''}
    ${amb?`<label class="ck"><input type="checkbox" data-k="loop"${e.loop?' checked':''}> לופ</label><label class="ck"><input type="checkbox" data-k="duck"${e.duck?' checked':''}> יורד כשמדברים</label>`:''}
    <label class="ck"><input type="checkbox" data-k="mute"${e.mute?' checked':''}> השתקה</label>
   </div>
   <details><summary>איך לייצר את זה ב-ElevenLabs</summary>${explainHTML(e)}</details>
   <footer><button data-a="play" class="sm">השמעה מכאן</button><button data-a="edit" class="sm">עריכה</button><button data-a="del" class="sm ghost">מחיקה</button></footer></article>`}
+function renderLayers(){const c=n=>S.effects.filter(e=>layerOf(e).id===n).length;
+  $('#lyl').innerHTML=`<div class="lyh"><b>שכבות</b><button id="lyadd" class="sm">+ שכבה חדשה</button></div>`+S.layers.map(L=>`<div class="ly" data-id="${L.id}">
+   <input type="text" value="${esc(L.name)}" data-lk="name" aria-label="שם השכבה">
+   <label>עוצמה <input type="range" min="0" max="1.5" step="0.05" value="${L.vol}" data-lk="vol"></label>
+   <label class="ck"><input type="checkbox" data-lk="mute"${L.mute?' checked':''}> השתקה</label>
+   <span class="cnt">${c(L.id)} אפקטים</span>
+   <button class="sm ghost" data-la="del"${S.layers.length<2?' disabled':''}>מחיקה</button></div>`).join('')}
 function renderFx(){const L=$('#fxl');const E=[...S.effects].sort((a,b)=>span(a)[0]-span(b)[0]);
   L.innerHTML=E.length?E.map(cardHTML).join(''):`<p class="empty">עוד אין אפקטים. בוחרים מילה בטקסט ולוחצים "הוספת אפקט כאן". כשהרשימה מוכנה, "מייל אפקטים לייצור" שולח את כל הפרומפטים מסודרים.</p>`}
-function layoutTL(){const sc=$('#sc'),inner=$('#inner'),pps=S.pps,T=total(true);inner.style.width=(Math.ceil(T*pps)+80)+'px';
+const PAD=40;let TW=0;
+const X=t=>TW-PAD-t*S.pps, TX=x=>(TW-PAD-x)/S.pps;
+function layoutTL(reset){const sc=$('#sc'),inner=$('#inner'),pps=S.pps,T=total(true),w=sc.clientWidth;
+  const tc=(!reset&&TW)?TX(sc.scrollLeft+w/2):null;
+  TW=Math.max(Math.ceil(T*pps)+2*PAD,w||0);inner.style.width=TW+'px';
   const wl=$('#wl');wl.style.top=(RH+WH)+'px';
-  wl.innerHTML=pps>=30?S.words.map((w,i)=>`<span data-i="${i}" class="${sel&&i>=sel.a&&i<=sel.b?'s':''}" style="left:${WT[i][0]*pps}px;width:${Math.max(6,(WT[i][1]-WT[i][0])*pps)}px">${esc(w.t)}</span>`).join(''):'';
-  const items=S.effects.map(e=>({e,sp:span(e)})).sort((a,b)=>a.sp[0]-b.sp[0]);const rows=[];
-  for(const it of items){let r=rows.findIndex(end=>end<=it.sp[0]-0.05);if(r<0){r=rows.length;rows.push(0)}rows[r]=it.sp[1];it.r=r}
-  const top=RH+WH+WLH+6,fl=$('#fl');fl.style.top=top+'px';
-  fl.innerHTML=items.map(({e,sp,r})=>`<div class="blk t-${e.type}${effBuf[e.id]?'':' wait'}${e.mute?' mute':''}" data-id="${e.id}" title="${esc(e.label)}" style="left:${sp[0]*pps}px;width:${Math.max(22,(sp[1]-sp[0])*pps)}px;top:${r*FXR}px"><b>${e.n}</b> ${esc(e.label)}</div>`).join('');
-  inner.style.height=(top+Math.max(1,rows.length)*FXR+10)+'px';drawWave();placePH()}
+  wl.innerHTML=pps>=30?S.words.map((x,i)=>`<span data-i="${i}" class="${sel&&i>=sel.a&&i<=sel.b?'s':''}" style="left:${X(WT[i][1])}px;width:${Math.max(6,(WT[i][1]-WT[i][0])*pps)}px">${esc(x.t)}</span>`).join(''):'';
+  let top=RH+WH+WLH;const fl=$('#fl');fl.style.top=top+'px';let html='',lanes='',y=0;
+  lanes+=`<div class="lane" style="top:0;height:${RH+WH}px"><span>קריינות</span></div><div class="lane" style="top:${RH+WH}px;height:${WLH}px;font-weight:400;color:var(--mut)"><span>מילים</span></div>`;
+  for(const L of S.layers){const items=S.effects.filter(e=>layerOf(e)===L).map(e=>({e,sp:span(e)})).sort((a,b)=>a.sp[0]-b.sp[0]);const rows=[];
+    for(const it of items){let r=rows.findIndex(end=>end<=it.sp[0]-0.05);if(r<0){r=rows.length;rows.push(0)}rows[r]=it.sp[1];it.r=r}
+    const h=Math.max(1,rows.length)*FXR+8;
+    for(const{e,sp,r}of items){const wd=Math.max(22,(sp[1]-sp[0])*pps);html+=`<div class="blk t-${e.type}${effBuf[e.id]?'':' wait'}${(e.mute||L.mute)?' mute':''}" data-id="${e.id}" title="${esc(e.label)}" style="left:${X(sp[0])-wd}px;width:${wd}px;top:${y+4+r*FXR}px"><b>${e.n}</b> ${esc(e.label)}</div>`}
+    html+=`<div class="lsep" style="top:${y+h}px"></div>`;
+    lanes+=`<div class="lane${L.mute?' off':''}" style="top:${top+y}px;height:${h}px"><span title="${esc(L.name)}">${esc(L.name)}</span><button data-lm="${L.id}" class="${L.mute?'on':''}">${L.mute?'מושתק':'השתקה'}</button></div>`;
+    y+=h}
+  fl.innerHTML=html;fl.style.height=y+'px';
+  const H=top+y+2;inner.style.height=H+'px';const ln=$('#lanes');ln.innerHTML=lanes;ln.style.height=H+'px';
+  sc.scrollLeft=tc==null?TW:X(tc)-w/2;drawWave();placePH()}
 function drawWave(){const sc=$('#sc'),cv=$('#cv'),dpr=devicePixelRatio||1,w=sc.clientWidth,h=RH+WH;if(!w)return;
   cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';cv.style.left=sc.scrollLeft+'px';
   const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);const pps=S.pps,x0=sc.scrollLeft;
-  const step=pps>=100?1:pps>=40?5:pps>=15?10:30;g.fillStyle=col('--mut');g.font='11px Assistant, sans-serif';
-  for(let t=Math.floor(x0/pps/step)*step;t*pps<x0+w;t+=step){const x=t*pps-x0;g.fillRect(x,RH-6,1,6);g.fillText(fmt0(t),x+3,12)}
-  g.fillStyle=col('--accSoft');let acc=0;for(const p of pts()){g.fillRect((p.at+acc)*pps-x0,RH,p.sec*pps,WH);acc+=p.sec}
+  const step=pps>=100?1:pps>=40?5:pps>=15?10:30;g.fillStyle=col('--mut');g.font='11px Assistant, sans-serif';g.textAlign='right';
+  const tHi=TX(x0),tLo=TX(x0+w);
+  for(let t=Math.max(0,Math.floor(tLo/step)*step);t<=tHi;t+=step){const x=X(t)-x0;g.fillRect(x,RH-6,1,6);g.fillText(fmt0(t),x-3,12)}
+  g.fillStyle=col('--accSoft');let acc=0;for(const p of pts()){g.fillRect(X(p.at+acc+p.sec)-x0,RH,p.sec*pps,WH);acc+=p.sec}
   if(!narBuf)return;const d=narBuf.getChannelData(0),sr=narBuf.sampleRate,SG=segs(),mid=RH+WH/2;g.fillStyle=col('--wave');
-  for(let x=0;x<w;x++){const T1=(x0+x)/pps,T2=(x0+x+1)/pps;const sg=SG.find(s=>T1>=s.o&&T1<s.o+(s.e-s.s));if(!sg)continue;
+  for(let x=0;x<w;x++){const T2=TX(x0+x),T1=TX(x0+x+1);if(T2<0)continue;const sg=SG.find(s=>T1>=s.o&&T1<s.o+(s.e-s.s));if(!sg)continue;
     const a=Math.floor((sg.s+T1-sg.o)*sr),b=Math.min(d.length,Math.floor((sg.s+T2-sg.o)*sr));let mn=0,mx=0;const stp=Math.max(1,Math.floor((b-a)/300));
     for(let i=a;i<b;i+=stp){const v=d[i];if(v<mn)mn=v;if(v>mx)mx=v}const y1=mid-mx*WH*0.48,y2=mid-mn*WH*0.48;g.fillRect(x,y1,1,Math.max(1,y2-y1))}}
-function placePH(p){$('#ph').style.left=((p??cur)*S.pps)+'px';updTime(p)}
+function placePH(p){$('#ph').style.left=X(p??cur)+'px';updTime(p)}
 function updTime(p){$('#time').textContent=fmt(p??pos())+' / '+fmt0(total(true))}
 let nowEl=null;
 function hiNow(p){if(!WT.length)return;let lo=0,hi=WT.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(WT[m][0]<=p){k=m;lo=m+1}else hi=m-1}
@@ -546,26 +589,30 @@ function hiNow(p){if(!WT.length)return;let lo=0,hi=WT.length-1,k=-1;while(lo<=hi
 
 /* ============ דיאלוג אפקט ============ */
 let fxCtx=null;
-function openFx(id){const F=$('#fxf').elements;let e,hits=[];
+function openFx(id,preset){const F=$('#fxf').elements;let e,hits=[];
   if(id){e=S.effects.find(x=>x.id===id);fxCtx={id};$('#fxh').textContent=`עריכת אפקט ${e.n}`}
   else{e={type:'oneshot',intensity:'soft',label:'',en:'',dur:3,len:20,music:false};$('#fxh').textContent='אפקט חדש';
     if(sel&&S.words.length){fxCtx={w0:sel.a,w1:sel.b};hits=detect(sel.a,sel.b);const d=hits[0];if(d)Object.assign(e,{label:d.he,en:d.en,type:d.type,dur:d.dur,music:!!d.music});else e.type=sel.b>sel.a?'ambience':'oneshot';if(sel.b>sel.a&&d)e.type=d.type}
+    else if(preset==='bg'){const d=DICT.find(x=>x.he==='מוזיקת רקע רכה');fxCtx={abs:true,at:0,full:true};Object.assign(e,{label:'רקע עדין לכל המדיטציה',en:d.en,type:'ambience',music:true,intensity:'vsoft'});$('#fxh').textContent='רקע עדין לכל המדיטציה'}
     else fxCtx={abs:true,at:cur}}
-  const ab=id?e.abs:fxCtx.abs;
-  $('#fxw').textContent=id?(e.abs?`בזמן ${fmt0(e.at)}`:`על המילים: «${ctxWords(e)}»`):ab?`בנקודה ${fmt0(cur)} על הציר`:`על המילים: «${S.words.slice(sel.a,sel.b+1).map(w=>w.t).join(' ')}»`;
-  F.label.value=e.label;F.en.value=e.en;F.type.value=e.type;F.intensity.value=e.intensity||'soft';F.dur.value=e.dur||3;F.len.value=e.len||20;F.music.checked=!!e.music;
-  $('#lenL').hidden=!ab;if(!id&&!hits.length&&sel)hits=[];
+  const ab=id?e.abs:fxCtx.abs,full=id?e.full:fxCtx.full;
+  e.layer=e.layer||(e.type==='ambience'&&S.layers.some(l=>l.id==='bg')?'bg':(S.layers.find(l=>l.id==='fx')||S.layers[0]).id);
+  $('#fxlayer').innerHTML=S.layers.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');if(!S.layers.some(l=>l.id===e.layer))e.layer=S.layers[0].id;
+  $('#fxw').textContent=full?`לאורך כל המדיטציה (00:00–${fmt0(narEnd()+4)}). אפשר לבחור מההצעות או לתאר רקע אחר, למשל גלים רחוקים או יער שקט.`:id?(e.abs?`בזמן ${fmt0(e.at)}`:`על המילים: «${ctxWords(e)}»`):ab?`בנקודה ${fmt0(cur)} על הציר`:`על המילים: «${S.words.slice(sel.a,sel.b+1).map(w=>w.t).join(' ')}»`;
+  F.label.value=e.label;F.en.value=e.en;F.type.value=e.type;F.intensity.value=e.intensity||'soft';F.dur.value=e.dur||3;F.len.value=e.len||20;F.music.checked=!!e.music;F.layer.value=e.layer;fxCtx.layerTouched=!!id;
+  $('#lenL').hidden=!ab||full;if(!id&&!hits.length&&sel)hits=[];
   const order=[...hits,...DICT.filter(d=>!hits.includes(d))];$('#fxs').innerHTML=order.map(d=>`<button type="button" data-d="${DICT.indexOf(d)}" class="${hits.includes(d)?'hit':''}">${esc(d.he)}</button>`).join('');
   updFx();const dlg=$('#fxd');dlg.returnValue='';dlg.showModal()}
-function fxVals(){const F=$('#fxf').elements;return{label:F.label.value.trim()||'אפקט',en:F.en.value.trim(),type:F.type.value||'oneshot',intensity:F.intensity.value||'soft',dur:Math.min(30,Math.max(0.5,+F.dur.value||3)),len:+F.len.value||20,music:F.music.checked}}
+function fxVals(){const F=$('#fxf').elements;return{label:F.label.value.trim()||'אפקט',en:F.en.value.trim(),type:F.type.value||'oneshot',intensity:F.intensity.value||'soft',layer:F.layer.value,dur:Math.min(30,Math.max(0.5,+F.dur.value||3)),len:+F.len.value||20,music:F.music.checked}}
 function updFx(){const v=fxVals();$('#fxp').textContent=buildPrompt(v);$('#durL').hidden=v.type==='ambience';$('#fxwarn').textContent=v.en?(/[א-ת]/.test(v.en)?'כדאי לכתוב את התיאור באנגלית, כי ElevenLabs מבין אנגלית הרבה יותר טוב.':''):'כתבו תיאור קצר באנגלית או בחרו הצעה מוכנה.'}
-$('#fxf').addEventListener('input',updFx);
+$('#fxf').addEventListener('input',ev=>{if(fxCtx&&ev.target.name==='layer')fxCtx.layerTouched=true;
+  if(fxCtx&&!fxCtx.layerTouched&&ev.target.name==='type'){const F=$('#fxf').elements;const want=F.type.value==='ambience'?'bg':'fx';if(S.layers.some(l=>l.id===want))F.layer.value=want}updFx()});
 $('#fxs').addEventListener('click',ev=>{const b=ev.target.closest('[data-d]');if(!b)return;const d=DICT[+b.dataset.d],F=$('#fxf').elements;F.label.value=d.he;F.en.value=d.en;F.type.value=d.type;F.dur.value=d.dur;F.music.checked=!!d.music;updFx()});
 $('#fxd').addEventListener('close',()=>{if($('#fxd').returnValue!=='ok'||!fxCtx)return;const v=fxVals();
   if(fxCtx.id){Object.assign(S.effects.find(x=>x.id===fxCtx.id),v);hl=fxCtx.id}
-  else{const amb=v.type==='ambience';const e={id:uid(),n:S.nextN++,...v,vol:amb?0.5:0.8,fi:amb?3:0,fo:amb?4:0.5,off:0,loop:true,duck:true,mute:false,tail:2,file:''};
-    if(fxCtx.abs){e.abs=true;e.at=fxCtx.at}else{e.w0=fxCtx.w0;e.w1=fxCtx.w1}S.effects.push(e);hl=e.id;sel=null}
-  fxCtx=null;save();renderTx();renderSel();renderFx();layoutTL();const c=$(`.fxc[data-id="${hl}"]`);c&&c.scrollIntoView({block:'nearest',behavior:'smooth'})});
+  else{const amb=v.type==='ambience';const e={id:uid(),n:S.nextN++,...v,vol:fxCtx.full?0.35:amb?0.5:0.8,fi:fxCtx.full?4:amb?3:0,fo:fxCtx.full?6:amb?4:0.5,off:0,loop:true,duck:true,mute:false,tail:2,file:''};
+    if(fxCtx.abs){e.abs=true;e.at=fxCtx.at;if(fxCtx.full)e.full=true}else{e.w0=fxCtx.w0;e.w1=fxCtx.w1}S.effects.push(e);hl=e.id;sel=null}
+  fxCtx=null;save();renderTx();renderSel();renderLayers();renderFx();layoutTL();const c=$(`.fxc[data-id="${hl}"]`);c&&c.scrollIntoView({block:'nearest',behavior:'smooth'})});
 
 /* ============ מייל ============ */
 function buildMail(){const E=[...S.effects].sort((a,b)=>span(a)[0]-span(b)[0]);const hr='━━━━━━━━━━━━━━━━━━━━━━',cut='- - - - - - - - - - - - - - - - - - - -';
@@ -575,7 +622,7 @@ function buildMail(){const E=[...S.effects].sort((a,b)=>span(a)[0]-span(b)[0]);c
   '5. שומרים בשם הקובץ המומלץ. המספר בתחילת השם מאפשר להעלות את כל הקבצים יחד ב"העלאה מרוכזת", והכלי ישייך כל קובץ לאפקט שלו.',''];
   for(const e of E){const g=gen(e),x=explain(e),[st,en]=span(e),c=ctxWords(e);
     L.push(hr,`אפקט ${e.n}: ${e.label} (${TN[e.type]})`,hr,`מיקום: ${fmt0(st)}${e.type==='ambience'?' – '+fmt0(en):''}${c?` · על המילים: "${c}"`:''}`,
-     `הגדרות: משך ${g.dur} שניות | Prompt influence: ${g.infl} | Loop: ${g.loop?'כן':'לא'}`,`שם קובץ: ${fname(e)}`,'','פרומפט להעתקה:',cut,buildPrompt(e),cut,'',
+     `שכבה: ${layerOf(e).name}`,`הגדרות: משך ${g.dur} שניות | Prompt influence: ${g.infl} | Loop: ${g.loop?'כן':'לא'}`,`שם קובץ: ${fname(e)}`,'','פרומפט להעתקה:',cut,buildPrompt(e),cut,'',
      'למה הפרומפט בנוי כך:',...x.why.map(s=>'• '+s),'','ההגדרות:',...x.set.map(s=>'• '+s),'','מה לבדוק כשמקשיבים:',...x.listen.map(s=>'• '+s),'','אם התוצאה לא טובה:',...x.fix.map(s=>'• '+s),'')}
   return L.join('\n')}
 function openMail(){if(!S.effects.length){toast('עוד אין אפקטים ברשימה');return}const missing=S.effects.filter(e=>!(e.en||'').trim()).length;
@@ -614,30 +661,40 @@ $('#selbar').addEventListener('click',ev=>{const b=ev.target.closest('[data-a]')
   if(a==='x'){sel=null;renderTx();renderSel();layoutTL()}
   if(a==='pz'){const s=+b.dataset.s,k=S.pauses.findIndex(p=>p.w===sel.b);if(k>=0&&+S.pauses[k].sec===s)S.pauses.splice(k,1);else if(k>=0)S.pauses[k].sec=s;else S.pauses.push({w:sel.b,sec:s});save();renderAfterTiming()}});
 function renderAfterTiming(){renderSrc();renderTx();renderSel();renderFx();layoutTL();live()}
+$('#lyl').addEventListener('input',ev=>{const k=ev.target.dataset.lk;if(!k)return;const L=S.layers.find(l=>l.id===ev.target.closest('.ly').dataset.id);
+  L[k]=k==='name'?ev.target.value:k==='mute'?ev.target.checked:+ev.target.value;save();layoutTL();if(k!=='name')live()});
+$('#lyl').addEventListener('change',ev=>{if(ev.target.dataset.lk==='name')renderFx()});
+$('#lyl').addEventListener('click',async ev=>{if(ev.target.id==='lyadd'){S.layers.push({id:uid(),name:'שכבה '+(S.layers.length+1),vol:1,mute:false});save();renderLayers();layoutTL();const ins=document.querySelectorAll('#lyl .ly input[type=text]');const i=ins[ins.length-1];i&&(i.focus(),i.select());return}
+  const b=ev.target.closest('[data-la=del]');if(!b)return;const id=b.closest('.ly').dataset.id,L=S.layers.find(l=>l.id===id),n=S.effects.filter(e=>layerOf(e)===L).length;
+  const other=S.layers.find(l=>l.id!==id);if(!other)return;
+  if(!await confirmBox(`למחוק את השכבה "${L.name}"?`,n?`${n} האפקטים שבה יעברו לשכבה "${other.name}".`:'השכבה ריקה.','מחיקה'))return;
+  S.effects.forEach(e=>{if(layerOf(e)===L)e.layer=other.id});S.layers=S.layers.filter(l=>l!==L);save();renderLayers();renderFx();layoutTL();live()});
+$('#addBg').onclick=()=>{sel=null;renderSel();openFx(null,'bg')};
 $('#addAt').onclick=()=>{sel=null;renderSel();openFx(null)};
 $('#bulk').onchange=async ev=>{let ok=0,bad=[];for(const f of ev.target.files){const m=f.name.match(/^0*(\d+)/);const e=m&&S.effects.find(x=>x.n===+m[1]);if(e){await setEffectFile(e.id,f);ok++}else bad.push(f.name)}
   ev.target.value='';toast(`נטענו ${ok} קבצים`+(bad.length?` · לא שויכו: ${bad.length} (השם צריך להתחיל במספר האפקט)`:''))};
 const fxl=$('#fxl');
 fxl.addEventListener('input',ev=>{const k=ev.target.dataset.k;if(!k)return;const e=S.effects.find(x=>x.id===ev.target.closest('.fxc').dataset.id);
-  e[k]=ev.target.type==='checkbox'?ev.target.checked:+ev.target.value;if(k==='vol')ev.target.nextElementSibling.textContent=Math.round(e.vol*100)+'%';save();layoutTL();live()});
+  e[k]=ev.target.type==='checkbox'?ev.target.checked:ev.target.tagName==='SELECT'?ev.target.value:+ev.target.value;if(k==='layer'){renderLayers();renderFx()}if(k==='vol')ev.target.nextElementSibling.textContent=Math.round(e.vol*100)+'%';save();layoutTL();live()});
 fxl.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.a==='file'){const f=t.files[0];if(f)setEffectFile(t.closest('.fxc').dataset.id,f);t.value=''}else if(t.dataset.k==='off'||t.dataset.k==='len')renderFx()});
 fxl.addEventListener('click',async ev=>{const b=ev.target.closest('button[data-a]');if(!b)return;const id=b.closest('.fxc').dataset.id,e=S.effects.find(x=>x.id===id),a=b.dataset.a;
   if(a==='copy')toast(await copyText(buildPrompt(e))?'הפרומפט הועתק':'ההעתקה נכשלה');
   if(a==='edit')openFx(id);
   if(a==='play'){stop();cur=Math.max(0,span(e)[0]-1.5);play()}
-  if(a==='del'&&await confirmBox(`למחוק את אפקט ${e.n}?`,e.label,'מחיקה')){S.effects=S.effects.filter(x=>x.id!==id);delete effBlob[id];delete effBuf[id];save();renderTx();renderFx();layoutTL();live()}});
+  if(a==='del'&&await confirmBox(`למחוק את אפקט ${e.n}?`,e.label,'מחיקה')){S.effects=S.effects.filter(x=>x.id!==id);delete effBlob[id];delete effBuf[id];save();renderTx();renderLayers();renderFx();layoutTL();live()}});
 function focusCard(id){hl=id;document.querySelectorAll('.fxc.hl').forEach(c=>c.classList.remove('hl'));const c=$(`.fxc[data-id="${id}"]`);if(c){c.classList.add('hl');c.scrollIntoView({block:'nearest',behavior:'smooth'})}}
 const inner=$('#inner'),sc=$('#sc');
 inner.addEventListener('pointerdown',ev=>{const blk=ev.target.closest('.blk');
   if(blk){const e=S.effects.find(x=>x.id===blk.dataset.id),sx=ev.clientX,o0=+e.off||0,l0=parseFloat(blk.style.left);let moved=false;blk.setPointerCapture(ev.pointerId);
-    const mv=m=>{const dx=m.clientX-sx;if(Math.abs(dx)>3)moved=true;if(moved){e.off=Math.round((o0+dx/S.pps)*10)/10;blk.style.left=(l0+(e.off-o0)*S.pps)+'px'}};
+    const mv=m=>{const dx=m.clientX-sx;if(Math.abs(dx)>3)moved=true;if(moved){e.off=Math.round((o0-dx/S.pps)*10)/10;blk.style.left=(l0-(e.off-o0)*S.pps)+'px'}};
     const up=()=>{blk.removeEventListener('pointermove',mv);blk.removeEventListener('pointerup',up);if(moved){save();layoutTL();renderFx();live();focusCard(e.id)}else focusCard(e.id)};
     blk.addEventListener('pointermove',mv);blk.addEventListener('pointerup',up);return}
   const ws=ev.target.closest('#wl span');if(ws){const i=+ws.dataset.i;sel={a:i,b:i,a0:i};seekTo(WT[i][0]);renderTx();renderSel();layoutTL();return}
-  const x=ev.clientX-inner.getBoundingClientRect().left;seekTo(x/S.pps)});
+  const x=ev.clientX-inner.getBoundingClientRect().left;seekTo(Math.max(0,TX(x)))});
+$('#lanes').addEventListener('click',ev=>{const b=ev.target.closest('[data-lm]');if(!b)return;const L=S.layers.find(l=>l.id===b.dataset.lm);L.mute=!L.mute;save();renderLayers();layoutTL();live()});
 let raf=0;sc.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(drawWave)});
-new ResizeObserver(()=>drawWave()).observe(sc);
-function zoom(f){S.pps=Math.min(400,Math.max(6,S.pps*f));layoutTL();sc.scrollLeft=pos()*S.pps-sc.clientWidth/2;drawWave();save()}
+let lastW=0;new ResizeObserver(()=>{const w=sc.clientWidth;if(narBuf&&w&&Math.abs(w-lastW)>2){lastW=w;layoutTL()}else drawWave()}).observe(sc);
+function zoom(f){S.pps=Math.min(400,Math.max(6,S.pps*f));layoutTL();sc.scrollLeft=X(pos())-sc.clientWidth/2;drawWave();save()}
 $('#zi').onclick=()=>zoom(1.4);$('#zo').onclick=()=>zoom(1/1.4);
 $('#play').onclick=play;
 $('#nv').oninput=e=>{S.narVol=+e.target.value;save();live()};

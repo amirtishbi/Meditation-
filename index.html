@@ -232,7 +232,7 @@ textarea{width:100%;line-height:1.5}
   </section>
   <section class="card">
     <div class="colh"><h2>הזמנות אפקטים</h2>
-      <div class="row"><button id="osug" class="sm">הצעות של Gemini</button><button id="obg" class="sm">רקע עדין לכל המדיטציה</button><button id="oat" class="sm">הזמנה בנקודת הסמן</button><button id="ogenall" class="sm pri">יצירת כל האפקטים ב-ElevenLabs</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label><button id="omail" class="sm pri">מייל ההזמנות</button></div></div>
+      <div class="row"><button id="osug" class="sm">הצעות של Gemini</button><button id="obg" class="sm">רקע עדין לכל המדיטציה</button><button id="oat" class="sm">הזמנה בנקודת הסמן</button><label class="ck" title="רקעים של 10 שניות בלופ וצלילים נקודתיים קצרים — חוסך קרדיטים"><input type="checkbox" id="eco"> מצב חסכוני</label><button id="ogenall" class="sm pri">יצירת כל האפקטים ב-ElevenLabs</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label><button id="omail" class="sm pri">מייל ההזמנות</button></div></div>
     <div id="orl"></div>
   </section>
 </div>
@@ -693,12 +693,15 @@ const INT_EN={vsoft:'very soft, distant and quiet',soft:'soft and gentle',presen
 const isAmb=o=>o.type==='ambience'||o.type==='background';
 function buildPrompt(o){const base=(o.en||'').trim().replace(/[.,\s]+$/,'')||'[describe the sound in English]';
   return `${cap(base)}, ${INT_EN[o.intensity]||INT_EN.soft}. ${cap(TYPE_EN[isAmb(o)?'ambience':o.type])}. Soothing and calming for a children's guided meditation, warm tone, no harsh or high-pitched sounds, nothing scary, no voices${o.music?'':', no music'}. High quality stereo recording.`}
-function gen(o){const a=isAmb(o);let L=0;if(a){const[s,e]=orderSpan(o);L=e-s}return{dur:a?Math.min(30,Math.max(10,Math.ceil(L))):(+o.dur||3),infl:a?0.3:o.type==='transition'?0.45:0.6,loop:a,L}}
+const eco=()=>LS.get('medi.eco','1')==='1';
+function gen(o){const a=isAmb(o);let L=0;if(a){const[s,e]=orderSpan(o);L=e-s}let d=+o.dur||3;
+  if(eco()&&!a)d=o.type==='transition'?Math.min(d,4):Math.min(d,o.music&&d>3?6:3);
+  return{dur:a?(eco()?10:Math.min(30,Math.max(10,Math.ceil(L)))):d,infl:a?0.3:o.type==='transition'?0.45:0.6,loop:a,L,eco:eco()}}
 function explain(o){const g=gen(o),a=isAmb(o),d=DICT.find(x=>x.en===o.en);
   const why=[];if(o.why)why.push(o.why);why.push('התיאור באנגלית הוא הבסיס: ElevenLabs עובד הכי טוב עם תיאור פיזי (מקור הצליל, על מה, מאיזה מרחק) ולא עם רגש כללי.');
   why.push(a?'"continuous steady background ambience… seamless loop" מבקש משטח רציף בלי אירועים, כדי שלא יקפוץ באמצע משפט ושאפשר יהיה לחבר בלופ בלי תפר.':o.type==='oneshot'?'"a single isolated sound… no background noise" מבקש צליל אחד נקי שאפשר להניח בדיוק על המילה.':'"smooth gradual swell, soft attack" מבקש מעבר שמתנפח לאט במקום מכה.');
   why.push('החלק "for a children\'s guided meditation… nothing scary, no voices" מונע צלילים חדים, מאיימים או דיבור שיתחרו בקול שלך.');if(d)why.push(d.tip);
-  const set=[`משך ${g.dur} שניות. `+(a?(g.L>30?`הקטע אורך ${fmt0(g.L)}, ו-ElevenLabs מייצר עד 30 שניות, לכן הכלי ינגן את הקובץ בלופ לכל האורך.`:'מכסה את הקטע עם מרווח לדעיכה.'):'מספיק לצליל ולדעיכה הטבעית שלו.'),
+  const set=[`משך ${g.dur} שניות. `+(a&&g.eco?'מצב חסכוני: 10 שניות מספיקות, כי הכלי מנגן את הקובץ בלופ לכל האורך.':!a&&g.eco&&g.dur<(+o.dur||3)?'מצב חסכוני: קוצר למינימום שעדיין נשמע טבעי.':(a?(g.L>30?`הקטע אורך ${fmt0(g.L)}, ו-ElevenLabs מייצר עד 30 שניות, לכן הכלי ינגן את הקובץ בלופ לכל האורך.`:'מכסה את הקטע עם מרווח לדעיכה.'):'מספיק לצליל ולדעיכה הטבעית שלו.')),
    `Prompt influence: ${g.infl}. `+(a?'ערך נמוך נותן רקע טבעי ומגוון.':'ערך בינוני-גבוה מחייב להיצמד לתיאור.'),`Loop: ${g.loop?'להפעיל אם האפשרות מופיעה.':'כבוי.'}`,'כדאי לייצר 3–4 גרסאות ולבחור את הרכה והנקייה.'];
   const listen=a?['העוצמה אחידה לאורך כל הקובץ?','אין אירועים פתאומיים?','נעים להקשיב 30 שניות ברצף?']:['הצליל מתחיל מיד, בלי שקט ארוך לפניו?','יש צליל אחד ולא רצף?','לא חד מדי לאוזני ילד?'];
   const fix=['חזק או חד מדי: להוסיף "muffled, distant, very soft, low-pass filtered".','נשמע מלאכותי: להוריד את Prompt influence ב-0.1.','לא מה שביקשת: להעלות Prompt influence או לתאר את מקור הצליל פיזית יותר.','נכנסו מוזיקה או דיבור: לכתוב בתחילת הפרומפט "No music, no speech:".'];
@@ -765,6 +768,7 @@ $('#orl').addEventListener('click',async ev=>{const b=ev.target.closest('button[
 $('#orl').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.a==='file'&&t.files[0]){orderFile(S.orders.find(x=>x.id===t.closest('.oc').dataset.id),t.files[0]);t.value=''}});
 $('#bulk').onchange=async ev=>{let ok=0,bad=0;for(const f of ev.target.files){const m=f.name.match(/^0*(\d+)/),o=m&&S.orders.find(x=>x.n===+m[1]);if(o){await orderFile(o,f);ok++}else bad++}ev.target.value='';toast(`נטענו ${ok} קבצים`+(bad?` · ${bad} לא שויכו (השם צריך להתחיל במספר ההזמנה)`:''))};
 $('#osug').onclick=()=>suggest(false);
+$('#eco').checked=eco();$('#eco').onchange=e=>{LS.set('medi.eco',e.target.checked?'1':'0');renderOrders();toast(e.target.checked?'מצב חסכוני פעיל':'מצב חסכוני כבוי')};
 function xikey(){return LS.get('medi.xikey','')}
 async function sfxGenerate(o){const g=gen(o),model=LS.get('medi.sfxmodel','eleven_text_to_sound_v2');let text=buildPrompt(o);if(text.length>450)text=text.replace(' High quality stereo recording.','');if(text.length>450)text=text.slice(0,450);
   const body={text,duration_seconds:g.dur,prompt_influence:g.infl,model_id:model};if(g.loop&&model==='eleven_text_to_sound_v2')body.loop=true;

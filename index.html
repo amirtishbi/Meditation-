@@ -7,168 +7,167 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700&family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* VOICE: tender, quiet, a calm night room; tool first, no noise
-   IDEA: a sound editor's desk — tape timeline above, the script below, cue cards beside
-   PICTURE: the waveform timeline with the narration's words and effect cues on it
-   COLOUR and TYPE: lavender dusk ground, deep violet ink, teal = background beds, apricot = one-shot cues; Rubik + Assistant
-   LAYOUT: header, full-width timeline, script (right) + cue cards (left), sticky transport bar */
-:root{color-scheme:light dark;
---bg:light-dark(#f2f0f8,#13111b);--panel:light-dark(#ffffff,#1c1927);--ink:light-dark(#211a35,#ebe8f5);--mut:light-dark(#6a6383,#a29db8);
---line:light-dark(#e1dced,#2d293b);--acc:light-dark(#5a43c8,#9c8cf0);--accInk:#fff;--accSoft:light-dark(#e9e4fb,#2a2448);
---amb:light-dark(#21877e,#4cc3b7);--ambSoft:light-dark(#d6efec,#163633);--one:light-dark(#c8592a,#f0965f);--oneSoft:light-dark(#fbe3d6,#3c2417);
---tr:light-dark(#8a55c9,#c39af0);--trSoft:light-dark(#efe2fa,#33224a);--wave:light-dark(#9289b8,#7c75a6);--warn:light-dark(#a8401c,#f08a64)}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+/* VOICE: quiet night studio — a real audio editor, calm not flashy
+   IDEA: a multitrack recording desk: track headers, tape lanes, the script below, cue sheet beside it
+   PICTURE: the multitrack timeline itself, time running right-to-left like Hebrew text
+   COLOUR and TYPE: deep plum-night ground, lavender voice, teal beds, apricot cues; Rubik + Assistant
+   LAYOUT: header, toolbar, timeline (heads on the right), transcript + effect orders side by side */
+:root{color-scheme:dark;--bg:#13111a;--panel:#1b1825;--panel2:#221e2f;--lane:#17141f;--lane2:#1a1723;--ink:#ece9f5;--mut:#9b95b2;--line:#2d2939;
+--acc:#9c8cf0;--accD:#5a43c8;--accSoft:#2a2448;--sel:rgba(156,140,240,.2);--warn:#f08a64;--ok:#4cc3b7;--rec:#ef4f5f;
+--voice:#9c8cf0;--bgc:#4cc3b7;--amb:#6fa8f0;--fx:#f0965f;--oth:#e07aa8}
 *{box-sizing:border-box;min-width:0}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Assistant,system-ui,sans-serif;overflow-x:clip;padding-bottom:84px}
-h1,h2,h3{font-family:Rubik,Assistant,sans-serif;font-weight:700;line-height:1.1;margin:0;text-wrap:balance}
-h2{font-size:20px}
-button,.btn{font:600 15px Assistant,sans-serif;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;min-height:40px;padding:6px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-button:hover,.btn:hover{border-color:var(--acc)}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Assistant,system-ui,sans-serif}
+h1,h2,h3{font-family:Rubik,Assistant,sans-serif;font-weight:700;line-height:1.15;margin:0}
+h2{font-size:18px}h3{font-size:20px}
+button,.btn{font:600 14px Assistant,sans-serif;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;min-height:34px;padding:4px 11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+button:hover:not(:disabled),.btn:hover{border-color:var(--acc)}
+button:disabled{opacity:.4;cursor:default}
 button:focus-visible,.btn:focus-within,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.pri{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
+.pri{background:var(--accD);border-color:var(--accD);color:#fff}
 .ghost{background:transparent}
-.sm{min-height:34px;padding:4px 10px;font-size:14px}
-input,select,textarea{font:16px Assistant,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
-input[type=range]{padding:0;accent-color:var(--acc)}
-input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:18px;height:18px}
-label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+.sm{min-height:28px;padding:2px 8px;font-size:13px}
+svg.i{width:16px;height:16px;fill:currentColor;flex:none}
+input,select,textarea{font:15px Assistant,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 9px}
+input[type=range]{padding:0;accent-color:var(--acc);background:none;border:0}
+input[type=checkbox],input[type=radio]{accent-color:var(--acc);width:16px;height:16px}
+label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13.5px}
 label.ck{flex-direction:row;align-items:center;gap:6px}
 small,.mut{color:var(--mut);font-weight:400}
-.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:12px max(3vw,16px);background:var(--panel);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px}
-.brand b{font:700 19px Rubik,sans-serif;display:block}.brand small{font-size:13px}
-.proj{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-inline-start:auto}
-#pname{width:220px;font-weight:600}
-#stat{font-size:13px;color:var(--mut);min-width:60px}
-main{padding:18px max(3vw,16px)}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:center;max-width:1180px;margin:3vh auto}
-.hero h1{font-size:clamp(30px,3.6vw,46px);margin-bottom:14px}
-.hero p{font-size:17px;color:var(--mut);max-width:52ch}
-.drop{border:2px dashed var(--line);border-radius:18px;padding:28px;background:var(--panel);transition:border-color .2s}
-.drop.over{border-color:var(--acc);background:var(--accSoft)}
-.steps{margin:20px 0 0;padding:0;list-style:none;display:grid;gap:10px;counter-reset:s}
-.steps li{counter-increment:s;display:flex;gap:10px;align-items:baseline}
-.steps li::before{content:counter(s);font:700 14px Rubik;color:var(--acc);background:var(--accSoft);border-radius:50%;width:26px;height:26px;display:inline-grid;place-items:center;flex:none}
-.art{width:100%;height:auto;border-radius:18px;display:block}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
-.srcbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
-.srcbar .nm{font-weight:700}
-#tst{font-size:14px;color:var(--mut)}#tst.err{color:var(--warn);font-weight:600}
-.tlw{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 0 0;overflow:hidden}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}.brand b{font:700 18px Rubik;display:block}.brand small{font-size:12.5px}
+.proj{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-inline-start:auto}
+#pname{width:230px;font-weight:700}
+#stat{font-size:12.5px;color:var(--mut);min-width:56px}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 18px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.tools .g{display:flex;gap:4px;align-items:center;padding-inline-end:10px;margin-inline-end:4px;border-inline-end:1px solid var(--line)}
+.tools .g:last-child{border:0}
+#time{font:700 20px/1 Rubik;font-variant-numeric:tabular-nums;direction:ltr;min-width:150px;text-align:center;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+#play.on{background:var(--accD);color:#fff}
+#recb{color:var(--rec)}#recb.on{background:var(--rec);color:#fff;border-color:var(--rec);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.tl{display:grid;grid-template-columns:210px minmax(0,1fr);border-bottom:1px solid var(--line);position:relative;background:var(--lane)}
+#heads{position:relative;background:var(--panel);border-inline-end:1px solid var(--line)}
+.hd{position:absolute;inset-inline:0;border-bottom:1px solid var(--line);padding:6px 8px;display:grid;gap:5px;align-content:start;cursor:pointer;border-inline-start:4px solid var(--c)}
+.hd.on{background:var(--panel2)}
+.hd .r1{display:flex;gap:4px;align-items:center}
+.hd input[type=text]{flex:1;font-weight:700;padding:2px 6px;font-size:13.5px;background:transparent;border-color:transparent}
+.hd input[type=text]:hover,.hd input[type=text]:focus{border-color:var(--line);background:var(--bg)}
+.hd .ms{min-height:24px;width:26px;padding:0;font-size:12px;font-weight:700}
+.hd .ms.m.on{background:#5a2a2a;border-color:var(--warn);color:var(--warn)}
+.hd .ms.s.on{background:#2a4a46;border-color:var(--ok);color:var(--ok)}
+.hd .r2{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mut)}
+.hd .r2 input{flex:1}
+.hd .x{min-height:22px;width:22px;padding:0;font-size:13px;background:transparent;border-color:transparent;color:var(--mut)}
+.hd.txt{border-inline-start-color:var(--line);font-size:12.5px;color:var(--mut);cursor:default;padding-top:12px}
+.hd.rul{border:0;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 8px;cursor:default}
 #sc{overflow-x:auto;overflow-y:hidden;position:relative}
-.tlg{display:grid;grid-template-columns:128px minmax(0,1fr)}
-#lanes{position:relative;border-inline-end:1px solid var(--line);background:var(--bg)}
-.lane{position:absolute;inset-inline:0;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:13px;font-weight:700;border-bottom:1px solid var(--line);overflow:hidden}
-.lane span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.lane button{min-height:24px;padding:0 6px;font-size:11.5px;border-radius:6px}
-.lane button.on{background:var(--oneSoft);border-color:var(--one);color:var(--one)}
-.lane.off span{opacity:.45;text-decoration:line-through}
-.lsep{position:absolute;left:0;right:0;border-top:1px solid var(--line);pointer-events:none}
-.lyl{display:grid;gap:8px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-.ly{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto auto auto;gap:10px;align-items:center}
-.ly input[type=text]{font-weight:700;padding:5px 8px}
-.ly label{flex-direction:row;align-items:center;gap:6px;font-size:13px}
-.ly .cnt{font-size:12.5px;color:var(--mut);white-space:nowrap}
-.lyh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.lyh b{font-size:15px}
-@media(max-width:700px){.ly{grid-template-columns:1fr 1fr}}
-#inner{position:relative;min-height:200px;cursor:text}
-#cv{position:absolute;top:0;left:0;pointer-events:none}
-#wl{position:absolute;left:0;right:0;height:26px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-#wl span{position:absolute;top:3px;height:20px;font-size:12px;line-height:20px;overflow:hidden;white-space:nowrap;text-align:center;color:var(--mut);border-left:1px solid var(--line);direction:rtl;cursor:pointer}
-#wl span.s{background:var(--accSoft);color:var(--ink)}
-#fl{position:absolute;left:0;right:0}
-.blk{position:absolute;height:26px;border-radius:7px;font-size:12.5px;line-height:24px;padding:0 6px;white-space:nowrap;overflow:hidden;cursor:grab;direction:rtl;border:1px solid;user-select:none;touch-action:none}
-.blk b{font-family:Rubik}
-.blk.t-ambience{background:var(--ambSoft);border-color:var(--amb);color:var(--ink)}
-.blk.t-oneshot{background:var(--oneSoft);border-color:var(--one)}
-.blk.t-transition{background:var(--trSoft);border-color:var(--tr)}
-.blk.wait{border-style:dashed;opacity:.8}.blk.mute{opacity:.4}
-#ph{position:absolute;top:0;bottom:0;width:2px;background:var(--acc);pointer-events:none;left:0}
-.tlhint{font-size:13px;color:var(--mut);padding:6px 12px;border-top:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap}
-.lg{display:inline-flex;align-items:center;gap:5px}.lg i{width:12px;height:12px;border-radius:3px;display:inline-block}
-.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
-.txc{border-top-left-radius:0;border-top-right-radius:0;border-top:0;margin-top:-1px}
-.colh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-#selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--accSoft);border-radius:10px;padding:8px 10px;margin-bottom:10px}
-#selbar[hidden]{display:none}
-#selbar .q{font-weight:700}#selbar .tm{font-variant-numeric:tabular-nums;color:var(--mut)}
-.pzc{display:inline-flex;gap:4px;align-items:center;font-size:14px}
-#tx{font-size:19px;line-height:2.05;max-height:42vh;overflow-y:auto;position:relative;padding-inline-end:6px}
-.w{border-radius:5px;padding:1px 2px;cursor:pointer;position:relative}
+#inner{position:relative;user-select:none}
+#lbg,#ov{position:absolute;inset:0}
+#cv{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
+#ov{z-index:2}
+.lb{position:absolute;left:0;right:0;border-bottom:1px solid var(--line)}
+.lb.alt{background:var(--lane2)}.lb.on{background:#211d2e}
+.rul{position:absolute;left:0;right:0;top:0;cursor:pointer}
+.clip{position:absolute;border-radius:6px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);overflow:hidden}
+.clip.sel{box-shadow:0 0 0 2px #fff inset}
+.clip.mute{opacity:.4}
+.chd{height:17px;background:color-mix(in srgb,var(--c) 55%,#0000);color:#fff;font-size:11.5px;line-height:17px;padding:0 16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:grab;direction:rtl}
+.chd:active{cursor:grabbing}
+.fh{position:absolute;top:0;width:12px;height:12px;background:#fff;border-radius:2px;cursor:ew-resize;z-index:2;opacity:.85}
+.fh.i{right:0;clip-path:polygon(100% 0,0 0,100% 100%)}
+.fh.o{left:0;clip-path:polygon(0 0,100% 0,0 100%)}
+.edge{position:absolute;top:17px;bottom:0;width:7px;cursor:col-resize;z-index:2}
+.edge.s{right:0}.edge.e{left:0}
+.edge:hover{background:rgba(255,255,255,.15)}
+.gst{position:absolute;border:1.5px dashed var(--c);border-radius:6px;color:var(--c);font-size:11.5px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:color-mix(in srgb,var(--c) 6%,transparent);cursor:pointer;direction:rtl}
+.selr{position:absolute;background:var(--sel);border-inline:1px solid var(--acc);pointer-events:none;z-index:3}
+#ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;pointer-events:none;z-index:4;left:0}
+#ph.rec{background:var(--rec)}
+.sen{position:absolute;height:20px;border-radius:5px;background:var(--accSoft);border:1px solid #3b3460;color:var(--ink);font-size:11.5px;line-height:18px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;cursor:grab}
+.wd{position:absolute;height:17px;font-size:11px;line-height:17px;color:var(--mut);white-space:nowrap;overflow:hidden;text-align:center;border-left:1px solid var(--line);direction:rtl;cursor:pointer}
+.wd.s{background:var(--sel);color:#fff}
+.recclip{position:absolute;background:rgba(239,79,95,.25);border:1px solid var(--rec);border-radius:6px}
+#empty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:5}
+#empty div{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:22px 28px;text-align:center;pointer-events:auto;max-width:520px}
+#empty b{font:700 20px Rubik;display:block;margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--mut);padding:6px 18px;display:flex;gap:18px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.hint kbd{font:600 11.5px ui-monospace,monospace;background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink)}
+.panels{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:14px 18px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-height:300px}
+.colh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#trst{font-size:13px;color:var(--mut)}#trst.err{color:var(--warn);font-weight:700}
+#selbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--accSoft);border-radius:9px;padding:7px 9px;margin-bottom:10px}
+#selbar .q{font-weight:700}
+#tx{font-size:18px;line-height:2;max-height:62vh;overflow-y:auto;position:relative;padding-inline-end:4px}
+#tx p{margin:0 0 6px}
+.w{border-radius:4px;padding:1px 2px;cursor:pointer}
 .w:hover{background:var(--accSoft)}
-.w.s{background:var(--acc);color:var(--accInk)}
+.w.s{background:var(--accD);color:#fff}
 .w.now{box-shadow:inset 0 -3px 0 var(--acc)}
-.w.m-amb{background-image:linear-gradient(var(--ambSoft),var(--ambSoft))}
-.w.m-one{text-decoration:underline 3px var(--one);text-underline-offset:5px}
-.w.s.m-amb{background-image:none}
-.w sup{font:700 11px Rubik;border-radius:8px;padding:0 5px;margin-inline-end:2px;color:#fff;vertical-align:super}
-sup.t-ambience{background:var(--amb)}sup.t-oneshot{background:var(--one)}sup.t-transition{background:var(--tr)}
+.w.gone{opacity:.35;text-decoration:line-through}
+.w sup{font:700 10px Rubik;border-radius:7px;padding:0 4px;margin-inline-end:2px;color:#13111a;background:var(--c);vertical-align:super}
 .w[contenteditable=true]{outline:2px solid var(--acc);background:var(--bg)}
-.pz{min-height:26px;padding:0 8px;font-size:13px;border-radius:13px;background:var(--accSoft);border-color:transparent;color:var(--acc);margin:0 4px;vertical-align:middle}
-.empty{color:var(--mut);font-size:16px;line-height:1.6}
-.trbox{display:grid;gap:12px;font-size:16px;line-height:1.5;background:var(--accSoft);border-radius:12px;padding:16px;max-width:640px}
-#txst.err{color:var(--warn);font-weight:700}
-#fxl{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));align-items:start}
-.fxc{border:1px solid var(--line);border-radius:12px;padding:12px;border-inline-start:5px solid var(--one);background:var(--panel)}
-.fxc.t-ambience{border-inline-start-color:var(--amb)}.fxc.t-transition{border-inline-start-color:var(--tr)}
-.fxc.hl{box-shadow:0 0 0 3px var(--accSoft)}
-.fxc>header{display:flex;gap:10px;align-items:center}
-.fxc>header>div{flex:1}.fxc>header b{display:block;font-size:16px}.fxc>header small{font-size:13px}
-.num{font:700 15px Rubik;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accSoft);color:var(--acc);flex:none}
-.chip{font-size:12.5px;font-weight:700;border-radius:20px;padding:2px 10px;white-space:nowrap}
-.chip.wait{background:var(--oneSoft);color:var(--one)}.chip.ok{background:var(--ambSoft);color:var(--amb)}
-.pr{margin:10px 0;background:var(--bg);border-radius:8px;padding:8px 10px;display:grid;gap:6px}
-.pr code{direction:ltr;text-align:left;font:13.5px/1.5 ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere;display:block}
-.pr .gs{font-size:13px;color:var(--mut)}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.fn{font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;direction:ltr}
-.ctl{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px 12px;margin-top:10px}
-.ctl label{font-size:13px}.ctl input[type=number]{width:100%;padding:5px 8px}
-.ctl output{font-size:12px;color:var(--mut)}
-.fxc details{margin-top:10px;font-size:14.5px}
-.fxc summary{cursor:pointer;font-weight:700;color:var(--acc)}
-.fxc details h4{margin:10px 0 4px;font-size:14px}
-.fxc details ul{margin:0;padding-inline-start:18px}
-.fxc>footer{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.bar{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;padding:10px max(3vw,16px);flex-wrap:wrap;z-index:5}
-.bar .sp{flex:1}
-#time{font-variant-numeric:tabular-nums;font-weight:700;min-width:130px;direction:ltr;text-align:right}
-.grp{display:inline-flex;align-items:center;gap:6px;flex-direction:row;font-size:14px}
-#play{min-width:96px;justify-content:center}
-dialog{border:1px solid var(--line);border-radius:16px;background:var(--panel);color:var(--ink);padding:0;width:min(720px,94vw);max-height:92vh}
-dialog::backdrop{background:rgb(20 14 40 / .45)}
-.dlg{padding:20px;display:grid;gap:14px}
-.dlg h3{font-size:22px}
+.st{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;margin-inline-end:4px;direction:ltr;display:inline-block}
+.empty{color:var(--mut);font-size:15px;line-height:1.6}
+.trbox{display:grid;gap:10px;background:var(--accSoft);border-radius:10px;padding:14px;font-size:14.5px}
+#orl{display:grid;gap:10px;max-height:66vh;overflow-y:auto;padding-inline-end:4px}
+.oc{border:1px solid var(--line);border-inline-start:4px solid var(--c);border-radius:10px;padding:10px 12px;background:var(--panel2)}
+.oc.hl{box-shadow:0 0 0 2px var(--acc)}
+.oc>header{display:flex;gap:8px;align-items:center}
+.oc>header>div{flex:1}.oc>header b{display:block;font-size:15px}.oc>header small{font-size:12.5px}
+.num{font:700 13px Rubik;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#13111a;flex:none}
+.chip{font-size:11.5px;font-weight:700;border-radius:20px;padding:1px 8px;white-space:nowrap}
+.chip.wait{background:#3c2417;color:var(--fx)}.chip.ok{background:#163633;color:var(--ok)}.chip.g{background:var(--accSoft);color:var(--acc)}
+.q2{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
+.why{font-size:13px;color:var(--mut);margin:4px 0 0}
+.pr{margin:8px 0;background:var(--bg);border-radius:7px;padding:7px 9px;display:grid;gap:5px}
+.pr code{direction:ltr;text-align:left;font:12.5px/1.45 ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere;display:block}
+.pr .gs{font-size:12px;color:var(--mut)}
+.oc details{font-size:13.5px;margin-top:6px}.oc summary{cursor:pointer;font-weight:700;color:var(--acc)}
+.oc details h4{margin:8px 0 2px;font-size:13px}.oc details ul{margin:0;padding-inline-start:18px}
+.oc footer{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:0;width:min(720px,94vw);max-height:92vh}
+dialog::backdrop{background:rgb(5 3 12 / .6)}
+.dlg{padding:18px;display:grid;gap:12px}
 .where{margin:0;color:var(--mut)}
-fieldset{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
-fieldset legend{font-weight:700;font-size:14px;margin-bottom:6px;width:100%}
-.opt{flex-direction:row;align-items:center;gap:6px;border:1px solid var(--line);border-radius:10px;padding:6px 10px;cursor:pointer;font-weight:600}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:6px}
+fieldset legend{font-weight:700;font-size:13.5px;margin-bottom:5px;width:100%}
+.opt{flex-direction:row;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:5px 9px;cursor:pointer}
 .opt:has(input:checked){border-color:var(--acc);background:var(--accSoft)}
-.opt small{font-size:12.5px}
-.sugg{display:flex;flex-wrap:wrap;gap:6px}
-.sugg button{min-height:32px;font-size:13.5px;padding:3px 10px;border-radius:16px}
+.sugg{display:flex;flex-wrap:wrap;gap:5px}
+.sugg button{min-height:28px;font-size:12.5px;padding:2px 9px;border-radius:14px}
 .sugg button.hit{background:var(--accSoft);border-color:var(--acc)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.prev{background:var(--bg);border-radius:10px;padding:10px 12px}
-.prev code{direction:ltr;text-align:left;display:block;font:13.5px/1.5 ui-monospace,Menlo,Consolas,monospace;margin-top:4px}
-.warnl{color:var(--warn);font-size:13.5px;font-weight:600}
-menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wrap:wrap}
-#mbody{width:100%;font-size:14px;line-height:1.5;min-height:300px}
-.note{margin:0;font-size:13.5px;color:var(--mut)}
-#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prev{background:var(--bg);border-radius:9px;padding:9px 11px}
+.prev code{direction:ltr;text-align:left;display:block;font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;margin-top:4px}
+.warnl{color:var(--warn);font-size:13px;font-weight:600}
+menu{display:flex;gap:6px;padding:0;margin:0;flex-wrap:wrap}
+textarea{width:100%;line-height:1.5}
+.note{margin:0;font-size:13px;color:var(--mut)}
+#vprev{width:100%;border-radius:10px;border:1px solid var(--line);aspect-ratio:16/9}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
 #toast.on{opacity:1}
-#probe{position:absolute;visibility:hidden}
-@media(max-width:900px){.cols,.hero{grid-template-columns:minmax(0,1fr)}.grid2{grid-template-columns:1fr}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+#dropov{position:fixed;inset:0;background:rgba(90,67,200,.25);border:3px dashed var(--acc);z-index:40;display:grid;place-items:center;font:700 26px Rubik;pointer-events:none}
+@media(max-width:1100px){.panels{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <symbol id="i-play" viewBox="0 0 24 24"><path d="M17 5v14L6 12z"/></symbol>
+ <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></symbol>
+ <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/></symbol>
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M17 5h2v14h-2zM15 5v14L5 12z"/></symbol>
+ <symbol id="i-undo" viewBox="0 0 24 24"><path d="M14 7H8V4L3 8.5 8 13V10h6a4 4 0 0 1 0 8h-3v2h3a6 6 0 0 0 0-12z"/></symbol>
+ <symbol id="i-redo" viewBox="0 0 24 24"><path d="M10 7h6V4l5 4.5-5 4.5V10h-6a4 4 0 0 0 0 8h3v2h-3a6 6 0 0 1 0-12z"/></symbol>
+</defs></svg>
+
 <header class="top">
   <div class="brand">
-    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="var(--accSoft)"/><path d="M24 9a10 10 0 1 0 8 15A8 8 0 1 1 24 9z" fill="var(--acc)"/><path d="M6 29c3-3 5 3 8 0s5 3 8 0 5 3 8 0 4 2 4 2" stroke="var(--amb)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-    <div><b>סטודיו מדיטציה</b><small>הכנת מדיטציות מונחות לילדים</small></div>
+    <svg width="36" height="36" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#2a2448"/><path d="M24 9a10 10 0 1 0 8 15A8 8 0 1 1 24 9z" fill="#9c8cf0"/><path d="M6 29c3-3 5 3 8 0s5 3 8 0 5 3 8 0 4 2 4 2" stroke="#4cc3b7" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    <div><b>סטודיו מדיטציה</b><small>עריכת מדיטציות מונחות לילדים</small></div>
   </div>
   <div class="proj">
     <input id="pname" aria-label="שם הפרויקט">
@@ -182,90 +181,78 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
   </div>
 </header>
 
-<main>
-  <section id="load" class="hero">
-    <div>
-      <h1>מעלים הקלטה, רואים מה נאמר, ושותלים צלילים במקום הנכון</h1>
-      <p>ההקלטה מתומללת עם זמן מדויק לכל מילה. מסמנים על הטקסט איפה נכנס אפקט, מקבלים מייל מסודר עם פרומפטים ל-ElevenLabs, מעלים את מה שנוצר, מכוונים עוצמות ומורידים קובץ מוכן.</p>
-      <div class="drop" id="drop">
-        <div class="row"><label class="btn pri">בחירת קובץ שמע<input type="file" id="nfile" accept="audio/*,.m4a,.mp3,.wav" hidden></label><span class="mut">או גרירת קובץ לכאן (MP3, WAV, M4A)</span></div>
-        <ol class="steps">
-          <li>תמלול עם חותמת זמן לכל מילה (ElevenLabs Scribe)</li>
-          <li>סימון מקומות לאפקטים ולהפסקות נשימה</li>
-          <li>מייל מסודר עם פרומפט מדויק והסבר לכל אפקט</li>
-          <li>העלאת האפקטים, כיוון עוצמות, והורדת MP3</li>
-        </ol>
-      </div>
-    </div>
-    <svg class="art" viewBox="0 0 560 420" role="img" aria-label="ירח מעל גבעות וגל קול">
-      <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2160"/><stop offset="1" stop-color="#6b54c9"/></linearGradient>
-      <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6d8" stop-opacity=".55"/><stop offset="1" stop-color="#fff6d8" stop-opacity="0"/></radialGradient></defs>
-      <rect width="560" height="420" fill="url(#sky)"/>
-      <g fill="#fff" opacity=".8"><circle cx="70" cy="60" r="1.6"/><circle cx="140" cy="110" r="1.2"/><circle cx="250" cy="44" r="1.8"/><circle cx="330" cy="96" r="1.1"/><circle cx="480" cy="58" r="1.5"/><circle cx="520" cy="140" r="1.2"/><circle cx="40" cy="160" r="1.1"/><circle cx="200" cy="170" r="1.3"/></g>
-      <circle cx="400" cy="130" r="110" fill="url(#glow)"/>
-      <circle cx="400" cy="130" r="52" fill="#fff3cf"/><circle cx="420" cy="118" r="46" fill="#5f4bbd" opacity=".9"/>
-      <path d="M0 300 C90 250 170 262 250 290 S420 250 560 280 V420 H0Z" fill="#3a2f80"/>
-      <path d="M0 340 C110 300 200 330 300 345 S470 310 560 330 V420 H0Z" fill="#2a8f86"/>
-      <path d="M0 380 C120 355 230 372 330 384 S480 360 560 372 V420 H0Z" fill="#1d6b64"/>
-      <path d="M40 232 q14-30 28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0 t28 0" stroke="#f3c7a6" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>
-      <g fill="#f0965f"><circle cx="152" cy="232" r="6"/><circle cx="348" cy="232" r="6"/></g>
-    </svg>
-  </section>
+<div class="tools">
+  <div class="g">
+    <button id="homeb" title="להתחלה (Home)"><svg class="i"><use href="#i-home"/></svg></button>
+    <button id="play" title="נגינה / עצירה (רווח)"><svg class="i"><use href="#i-play"/></svg><span>נגינה</span></button>
+    <button id="recb" title="הקלטה לשכבה המסומנת (R)"><svg class="i"><use href="#i-rec"/></svg><span>הקלטה</span></button>
+    <span id="time">00:00.0</span>
+  </div>
+  <div class="g">
+    <button id="bsplit" title="פיצול במיקום הסמן (S)">פיצול</button>
+    <button id="bdel" title="מחיקת הקטע המסומן וסגירת הרווח (Delete)">מחיקה</button>
+    <button id="bsil" title="מחיקת הקטע המסומן והשארת שקט (Shift+Delete)">השתקה</button>
+    <button id="bfi" title="Fade in על הקטע המסומן">Fade in</button>
+    <button id="bfo" title="Fade out על הקטע המסומן">Fade out</button>
+    <button id="bgain" title="שינוי עוצמה לקטע המסומן">עוצמה…</button>
+  </div>
+  <div class="g">
+    <button id="bundo" title="ביטול (Ctrl+Z)"><svg class="i"><use href="#i-undo"/></svg></button>
+    <button id="bredo" title="חזרה (Ctrl+Y)"><svg class="i"><use href="#i-redo"/></svg></button>
+  </div>
+  <div class="g">
+    <button id="zo" title="התרחקות">−</button><button id="zi" title="התקרבות">+</button><button id="zfit" class="sm">כל הציר</button>
+  </div>
+  <div class="g">
+    <label class="btn">ייבוא קובץ שמע<input type="file" id="impf" accept="audio/*,.m4a,.mp3,.wav,.webm,.ogg" multiple hidden></label>
+  </div>
+  <div class="g">
+    <label class="ck" title="מגביר את המיקס הסופי לעוצמה אחידה"><input type="checkbox" id="nrm" checked> איזון עוצמה</label>
+    <button id="emp3" class="pri">MP3</button><button id="ewav">WAV</button><button id="evid">וידאו ליוטיוב</button>
+  </div>
+</div>
 
-  <section id="studio" hidden>
-    <div class="srcbar" id="srcbar"></div>
-    <div class="tlw">
-      <div class="tlg"><div id="lanes"></div><div id="sc" dir="ltr"><div id="inner"><canvas id="cv"></canvas><div id="wl"></div><div id="fl"></div><div id="ph"></div></div></div></div>
-      <div class="tlhint"><span>הזמן רץ מימין לשמאל · לחיצה על הציר: קפיצה לנקודה · גרירת אפקט: הזזה בזמן</span><span class="lg"><i style="background:var(--amb)"></i>רקע מתמשך</span><span class="lg"><i style="background:var(--one)"></i>צליל נקודתי</span><span class="lg"><i style="background:var(--tr)"></i>מעבר</span><span class="lg"><i style="background:var(--accSoft)"></i>הפסקה</span></div>
-    </div>
-    <section class="card txc">
-        <div class="colh"><h2>הטקסט</h2><small>לחיצה על מילה בוחרת אותה · Shift+לחיצה בוחרת טווח · לחיצה כפולה מתקנת מילה</small></div>
-        <div id="selbar" hidden></div>
-        <div id="tx"></div>
-    </section>
-    <div class="cols">
-      <aside class="card">
-        <div class="colh"><h2>אפקטים</h2>
-          <div class="row"><button id="addBg" class="sm pri">רקע עדין לכל המדיטציה</button><button id="addAt" class="sm">אפקט בנקודה הנוכחית</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label></div></div>
-        <div class="lyl" id="lyl"></div>
-        <div id="fxl"></div>
-      </aside>
-    </div>
-  </section>
-</main>
+<div class="tl" id="tl">
+  <div id="heads"></div>
+  <div id="sc" dir="ltr"><div id="inner"><div id="lbg"></div><canvas id="cv"></canvas><div id="ov"></div><div id="ph"></div></div></div>
+  <div id="empty"><div><b>מתחילים כאן</b><span class="mut">גוררים לכאן את הקלטת המדיטציה, לוחצים "ייבוא קובץ שמע", או מקליטים ישירות עם כפתור ההקלטה.</span><div class="row" style="justify-content:center;margin-top:12px"><label class="btn pri">בחירת קובץ<input type="file" id="impf2" accept="audio/*,.m4a,.mp3,.wav,.webm,.ogg" hidden></label><button id="recb2">הקלטה עכשיו</button></div></div></div>
+</div>
+<div class="hint"><span>הזמן רץ מימין לשמאל</span><span>גרירה על שכבה: בחירת קטע</span><span>גרירת הפס העליון של קליפ: הזזה (גם בין שכבות)</span><span>קצוות: קיצור</span><span>משולשים לבנים: Fade</span><span><kbd>רווח</kbd> נגינה</span><span><kbd>S</kbd> פיצול</span><span><kbd>Delete</kbd> מחיקה</span><span><kbd>Ctrl+Z</kbd> ביטול</span><span><kbd>Ctrl+C</kbd>/<kbd>Ctrl+V</kbd> העתקה והדבקה</span></div>
 
-<footer class="bar" id="bar" hidden>
-  <button id="play" class="pri">נגינה</button>
-  <span id="time">00:00.0 / 00:00</span>
-  <span class="grp">זום <button id="zo" class="sm" aria-label="התרחקות">−</button><button id="zi" class="sm" aria-label="התקרבות">+</button></span>
-  <label class="grp">קריינות <input type="range" id="nv" min="0" max="1.5" step="0.05"></label>
-  <label class="ck"><input type="checkbox" id="nrm"> איזון עוצמה בייצוא</label>
-  <span class="sp"></span>
-  <button id="mail">מייל אפקטים לייצור</button>
-  <button id="mp3" class="pri">הורדת MP3</button>
-  <button id="wav">WAV</button>
-</footer>
+<div class="panels">
+  <section class="card">
+    <div class="colh"><h2>תמלול</h2><div class="row"><button id="trgo" class="pri sm">תמלול עם Gemini</button><button id="trpaste" class="sm">הדבקת תמלול</button></div></div>
+    <div id="trst"></div>
+    <div id="selbar" hidden></div>
+    <div id="tx"></div>
+  </section>
+  <section class="card">
+    <div class="colh"><h2>הזמנות אפקטים</h2>
+      <div class="row"><button id="osug" class="sm">הצעות של Gemini</button><button id="obg" class="sm">רקע עדין לכל המדיטציה</button><button id="oat" class="sm">הזמנה בנקודת הסמן</button><label class="btn sm">העלאה מרוכזת<input type="file" id="bulk" accept="audio/*" multiple hidden></label><button id="omail" class="sm pri">מייל ההזמנות</button></div></div>
+    <div id="orl"></div>
+  </section>
+</div>
 
 <dialog id="fxd"><form method="dialog" id="fxf" class="dlg">
-  <h3 id="fxh">אפקט חדש</h3>
+  <h3 id="fxh">הזמנת אפקט</h3>
   <p class="where" id="fxw"></p>
-  <label>מה שומעים? <small>שם קצר בעברית — יופיע בכרטיס ובמייל</small><input name="label" required></label>
-  <div><b style="font-size:14px">הצעות מוכנות</b> <small>(המודגשות זוהו בטקסט)</small><div class="sugg" id="fxs" style="margin-top:6px"></div></div>
+  <label>מה שומעים? <small>שם קצר בעברית</small><input name="label" required></label>
+  <div><b style="font-size:13.5px">הצעות מוכנות</b> <small>(המודגשות זוהו בטקסט)</small><div class="sugg" id="fxs" style="margin-top:5px"></div></div>
   <fieldset><legend>סוג</legend>
-    <label class="opt"><input type="radio" name="type" value="ambience">רקע מתמשך <small>לאורך קטע</small></label>
-    <label class="opt"><input type="radio" name="type" value="oneshot">צליל נקודתי <small>על מילה</small></label>
-    <label class="opt"><input type="radio" name="type" value="transition">מעבר <small>התנפחות רכה</small></label>
+    <label class="opt"><input type="radio" name="type" value="background">רקע לכל המדיטציה</label>
+    <label class="opt"><input type="radio" name="type" value="ambience">אווירה לאורך קטע</label>
+    <label class="opt"><input type="radio" name="type" value="oneshot">צליל נקודתי</label>
+    <label class="opt"><input type="radio" name="type" value="transition">מעבר רך</label>
   </fieldset>
   <fieldset><legend>עוצמה ומרחק</legend>
     <label class="opt"><input type="radio" name="intensity" value="vsoft">רך ורחוק מאוד</label>
     <label class="opt"><input type="radio" name="intensity" value="soft">רך</label>
     <label class="opt"><input type="radio" name="intensity" value="present">נוכח אבל עדין</label>
   </fieldset>
-  <label>תיאור הצליל באנגלית <small>הבסיס של הפרומפט: מה מקור הצליל, על מה, מאיזה מרחק. הכלי מוסיף לבד את שאר ההנחיות.</small><textarea name="en" rows="2" dir="ltr"></textarea></label>
-  <label>שכבה<select name="layer" id="fxlayer"></select></label>
+  <label>תיאור הצליל באנגלית <small>מה מקור הצליל, על מה, מאיזה מרחק. הכלי מוסיף לבד הנחיות של רוגע ובטיחות לילדים.</small><textarea name="en" rows="2" dir="ltr"></textarea></label>
   <div class="grid2">
+    <label>שכבה<select name="track" id="fxtrack"></select></label>
     <label id="durL">משך לייצור (שניות)<input name="dur" type="number" min="0.5" max="30" step="0.5"></label>
-    <label id="lenL">אורך הרקע בקובץ הסופי (שניות)<input name="len" type="number" min="2" max="900" step="1"></label>
   </div>
   <label class="ck"><input type="checkbox" name="music"> צליל מוזיקלי (קערה, פעמונים, משטח) — לא להוסיף "no music"</label>
   <div class="prev"><b>הפרומפט שייצא</b><code id="fxp"></code><div class="warnl" id="fxwarn"></div></div>
@@ -273,449 +260,608 @@ menu{display:flex;gap:8px;justify-content:flex-start;padding:0;margin:0;flex-wra
 </form></dialog>
 
 <dialog id="mld"><div class="dlg">
-  <h3>מייל האפקטים לייצור</h3>
+  <h3>מייל הזמנות האפקטים</h3>
   <div class="grid2"><label>אל<input id="mto" type="email" dir="ltr" placeholder="name@example.com"></label><label>נושא<input id="msu"></label></div>
-  <textarea id="mbody"></textarea>
+  <textarea id="mbody" rows="16" style="font-size:13.5px"></textarea>
   <p class="note" id="mnote"></p>
   <menu><button id="mgm" class="pri">פתיחה ב-Gmail</button><button id="mmt">תוכנת מייל אחרת</button><button id="mcp">העתקת כל המייל</button><button id="mcl" class="ghost">סגירה</button></menu>
 </div></dialog>
 
 <dialog id="setd"><form method="dialog" class="dlg" id="setf">
   <h3>הגדרות</h3>
-  <label>מפתח API של ElevenLabs <small>נשמר רק בדפדפן הזה ונשלח רק ל-ElevenLabs לצורך התמלול. נמצא ב-ElevenLabs תחת Developers ← API Keys.</small><input name="key" type="password" dir="ltr" autocomplete="off"></label>
+  <label>מפתח API של Gemini <small>חינם: נכנסים ל-aistudio.google.com/apikey ולוחצים Create API key. נשמר רק בדפדפן הזה ונשלח רק ל-Google.</small><input name="key" type="password" dir="ltr" autocomplete="off" placeholder="AIza..."></label>
   <div class="grid2">
-    <label>שפת ההקלטה<select name="lang"><option value="he">עברית</option><option value="en">אנגלית</option><option value="">זיהוי אוטומטי</option></select></label>
-    <label>מודל ElevenLabs<select name="model"><option value="scribe_v1">Scribe v1</option><option value="scribe_v2">Scribe v2</option></select></label>
+    <label>מודל תמלול<input name="tmodel" dir="ltr"></label>
+    <label>מודל להצעות אפקטים<input name="xmodel" dir="ltr"></label>
   </div>
-  <label>כתובת ברירת מחדל למייל האפקטים<input name="email" type="email" dir="ltr"></label>
+  <div class="grid2">
+    <label>שפת ההקלטה<select name="lang"><option value="he-IL">עברית</option><option value="en-US">אנגלית</option></select></label>
+    <label>כתובת ברירת מחדל למייל<input name="email" type="email" dir="ltr"></label>
+  </div>
   <menu><button value="ok" class="pri">שמירה</button><button value="cancel" formnovalidate class="ghost">ביטול</button></menu>
 </form></dialog>
 
+<dialog id="pasted"><form method="dialog" class="dlg" id="pastef">
+  <h3>הדבקת תמלול מ-Gemini</h3>
+  <p class="where">בלי מפתח API: מעלים את קובץ ההקלטה לאפליקציית Gemini, מדביקים שם את ההנחיה הזאת, ומעתיקים לכאן את התשובה.</p>
+  <div class="prev"><b>ההנחיה ל-Gemini</b><code id="pprompt" style="direction:rtl;text-align:right;font-family:Assistant"></code><div class="row" style="margin-top:6px"><button type="button" id="pcopy" class="sm">העתקת ההנחיה</button></div></div>
+  <label>התשובה של Gemini<textarea name="txt" rows="10" placeholder="[00:00.5] נשכב בנוחות ונעצום עיניים..."></textarea></label>
+  <menu><button value="ok" class="pri">טעינת התמלול</button><button value="cancel" formnovalidate class="ghost">ביטול</button></menu>
+</form></dialog>
+
+<dialog id="gaind"><form method="dialog" class="dlg">
+  <h3>עוצמה לקטע המסומן</h3>
+  <label>שינוי בדציבלים: <output id="gdb">0</output> dB<input type="range" id="gval" min="-30" max="12" step="1" value="-6"></label>
+  <menu><button value="ok" class="pri">החלה</button><button value="cancel" class="ghost">ביטול</button></menu>
+</form></dialog>
+
+<dialog id="vidd"><div class="dlg">
+  <h3>וידאו ליוטיוב</h3>
+  <p class="where">יוטיוב מקבל רק וידאו, אז הכלי יוצר קובץ וידאו עם תמונת רקע שקטה והמיקס של כל השכבות.</p>
+  <div class="grid2"><label>כותרת<input id="vt"></label><label>שורה שנייה<input id="vs" placeholder="מדיטציה מונחית לילדים"></label></div>
+  <canvas id="vprev" width="1920" height="1080"></canvas>
+  <p class="note" id="vst"></p>
+  <menu><button id="vgo" class="pri">יצירת הווידאו</button><button id="vcl" class="ghost">סגירה</button></menu>
+</div></dialog>
+
 <dialog id="cfd"><form method="dialog" class="dlg"><h3 id="cfh">לאשר?</h3><p id="cfm" class="where"></p><menu><button value="ok" class="pri" id="cfo">אישור</button><button value="cancel" class="ghost">ביטול</button></menu></form></dialog>
 
+<div id="dropov" hidden>שחררו כאן את קובץ השמע</div>
 <div id="toast" role="status"></div>
-<span id="probe"></span>
 
 <script>
 {
-/* ============ עזרים ============ */
-const $=s=>document.querySelector(s);
+/* ================= עזרים ================= */
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=t=>{t=Math.max(0,t||0);const m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,'0')+':'+s.toFixed(1).padStart(4,'0')};
 const fmt0=t=>{t=Math.max(0,Math.round(t||0));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0')};
 const uid=()=>Math.random().toString(36).slice(2,10);
 const LS={get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-const TN={ambience:'רקע מתמשך',oneshot:'צליל נקודתי',transition:'מעבר'};
-let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600)}
-function col(v){const p=$('#probe');p.style.color=`var(${v})`;return getComputedStyle(p).color}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800)}
 function confirmBox(title,msg,ok='אישור'){return new Promise(res=>{const d=$('#cfd');$('#cfh').textContent=title;$('#cfm').textContent=msg;$('#cfo').textContent=ok;d.returnValue='';d.onclose=()=>res(d.returnValue==='ok');d.showModal()})}
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(x){}a.remove();return ok}}
-function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+function dl(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),8000)}
 const safe=s=>(s||'meditation').replace(/[\\/:*?"<>|]+/g,'').trim()||'meditation';
+function b64(blob){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result));f.readAsDataURL(blob)})}
+function loadScript(src,test){return new Promise((res,rej)=>{if(test&&test())return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+const KIND_C={voice:'var(--voice)',bg:'var(--bgc)',amb:'var(--amb)',fx:'var(--fx)',other:'var(--oth)'};
+const TYPE_T={background:'bg',ambience:'amb',oneshot:'fx',transition:'fx'};
+const TN={background:'רקע לכל המדיטציה',ambience:'אווירה לאורך קטע',oneshot:'צליל נקודתי',transition:'מעבר רך'};
 
-/* ============ מילון צלילים ============ */
-const DICT=[
- {k:['ים','הים','גלים','גלי','חוף','אוקיינוס'],he:'גלי ים',type:'ambience',dur:3,en:'Gentle ocean waves slowly washing onto a sandy shore and drawing back, calm sea heard from a short distance',tip:'קצב איטי של גלים מתלבש על קצב נשימה של ילד, אפשר לומר "נושמים עם הגלים". "sandy shore" נותן גל רך; גלים על סלעים נשמעים חזקים ומתנפצים.'},
- {k:['גשם','טיפות','טפטוף','מטפטף'],he:'גשם עדין',type:'ambience',dur:3,en:'Light gentle rain falling softly on leaves and grass, steady soothing patter',tip:'"light" ו-"on leaves" חשובים. גשם על פח או חלון נשמע חד, ובלי "light" עלול להגיע גשם כבד עם רעם.'},
- {k:['רוח','בריזה','משב'],he:'רוח קלה',type:'ambience',dur:3,en:'Soft warm breeze moving through tall grass, gentle airy rustle',tip:'רוח לבד נשמעת כמו רעש לבן. העשב והרשרוש נותנים לה צורה וחום.'},
- {k:['יער','עצים','עלים','חורש'],he:'יער שקט',type:'ambience',dur:3,en:'Peaceful forest in the early morning, leaves rustling softly, a few faint birds far away',tip:'"a few faint birds far away" שומר שהציפורים לא ישתלטו על הרקע ולא יתחרו בקול שלך.'},
- {k:['ציפור','ציפורים','ציוץ','מצייצת','מצייצים'],he:'ציוץ ציפור',type:'oneshot',dur:3,en:'A single small songbird singing one short sweet chirping phrase, close and clear',tip:'מבקשים ציפור אחת וביטוי קצר, אחרת מתקבלת מקהלה שלמה.'},
- {k:['נחל','מעיין','פלג','זרם','מפל','אגם'],he:'מים זורמים',type:'ambience',dur:3,en:'A small babbling brook, clear water trickling gently over smooth stones',tip:'"small" ו-"gently" חשובים. המילה "river" לבד נותנת שאון חזק.'},
- {k:['פעמון','גונג','קערה','צלצול','צליל'],he:'קערה טיבטית',type:'oneshot',dur:7,music:true,en:'One soft strike on a Tibetan singing bowl, warm round resonant tone with a long slowly fading ring',tip:'מצוין לפתיחה ולסיום המדיטציה. קערה טיבטית עגולה ונעימה יותר מפעמון מתכת. כדאי משך ארוך (6–8 שניות) כדי לשמוע את כל הדעיכה.'},
- {k:['פעמונים','פעמוני'],he:'פעמוני רוח',type:'ambience',dur:3,music:true,en:'Gentle wind chimes swaying in a light breeze, soft random tinkling, far away and airy',tip:'"far away" מונע צלצולים חודרים. ברקע ארוך כדאי עוצמה נמוכה בכלי (30–40%).'},
- {k:['נשימה','נושמים','נשמו','שאיפה','נשיפה','לנשום','שואפים','נושפים'],he:'גל נשימה',type:'transition',dur:6,en:'A very soft airy swell that slowly rises and then falls, like one calm deep breath of wind',tip:'לא כותבים "breathing", כי אז המודל עלול לייצר נשימה של אדם. "airy swell" נותן תחושת נשימה בלי קול אנושי.'},
- {k:['כוכב','כוכבים','קסם','קסום','קסומה','נצנוץ','פיה','פיות','זוהר','נוצץ','נוצצים'],he:'נצנוץ קסום',type:'oneshot',dur:3,music:true,en:'A delicate magical sparkle of tiny soft twinkling chimes, light and dreamy',tip:'מתאים לרגעים של "דמיינו ש…". "tiny" ו-"soft" מונעים צלצול חודר.'},
- {k:['לילה','ירח','לישון','שינה','חושך'],he:'לילה שקט',type:'ambience',dur:3,en:'Calm warm summer night outdoors, soft crickets chirping far away, very peaceful and still',tip:'צרצרים צריכים להיות "far away". קרובים הם נשמעים צורמים.'},
- {k:['מדורה','אש','להבה','להבות'],he:'מדורה',type:'ambience',dur:3,en:'A small cozy campfire crackling softly with occasional gentle pops',tip:'בלי "gentle pops" יהיו פיצוצים חזקים שמקפיצים.'},
- {k:['לב','פעימות','פעימה','דופק','הלב'],he:'פעימות לב',type:'ambience',dur:3,en:'A slow calm heartbeat, soft and muffled, deep and gentle, about sixty beats per minute',tip:'"muffled" ו-"sixty beats per minute" נותנים קצב מרגיע. מתאים לתרגיל הקשבה לגוף.'},
- {k:['ענן','עננים','מרחף','מרחפים','מרחפת','לרחף','עפים','לעוף','בלון','שמיים','מתרומם','עולים'],he:'ריחוף',type:'transition',dur:4,en:'A soft airy whoosh of floating gently upward, light dreamy rising swell',tip:'מעבר טוב כשהסיפור "עולה למעלה" או עובר לסצנה חדשה.'},
- {k:['חתול','גרגור','מגרגר'],he:'גרגור חתול',type:'ambience',dur:3,en:'A cat purring softly and contentedly, close, warm and steady',tip:'גרגור הוא רקע מרגיע מאוד לילדים. מומלץ עוצמה נמוכה.'},
- {k:['צעד','צעדים','הולכים','הולך','הולכת','דשא','חול','שביל','פוסעים'],he:'צעדים רכים',type:'oneshot',dur:5,en:'Soft slow barefoot footsteps walking on grass, quiet and gentle',tip:'"barefoot" ו-"on grass" נותנים צעדים רכים. נעליים על רצפה נשמעות קשות.'},
- {k:['פרפר','פרפרים','כנפיים','כנפי'],he:'משק כנפיים',type:'oneshot',dur:2,en:'Very light delicate fluttering of tiny wings passing by, soft and airy',tip:'צליל עדין מאוד, אז כדאי עוצמה גבוהה יחסית בכלי (90–110%).'},
- {k:['לוויתן','לווייתן','דולפין','דולפינים','מתחת','צוללים','צולל','צוללת'],he:'מתחת למים',type:'ambience',dur:3,en:'Peaceful underwater ambience with soft muffled bubbles and a distant gentle whale song',tip:'"muffled" נותן את תחושת המים. שירת לווייתן רחוקה היא עוגן קסום לסיפורי ים.'},
- {k:['דלת','שער','נפתח','נפתחת','פותחים'],he:'דלת נפתחת',type:'oneshot',dur:3,en:'An old wooden door opening slowly and softly with a gentle low creak, friendly and not scary',tip:'"friendly and not scary" חיוני, כי חריקת דלת היא צליל קלאסי של סרטי אימה.'},
- {k:['שמש','בוקר','זריחה','אחו'],he:'בוקר באחו',type:'ambience',dur:3,en:'Calm early morning in a meadow, soft birdsong in the distance, light breeze, peaceful',tip:'רקע בהיר ופתוח, מתאים לסיום ולחזרה לערנות.'},
- {k:['מוזיקה','מנגינה'],he:'מוזיקת רקע רכה',type:'ambience',dur:3,music:true,en:'A soft warm ambient pad with slow sustained tones, dreamy and spacious, no melody and no beat',tip:'בלי מנגינה ובלי קצב, כדי שלא יתחרה בקול שלך. הכלי מנמיך אותו לבד כשאתה מדבר.'}
-];
-const norm=s=>String(s).replace(/[֑-ׇ]/g,'').replace(/[^א-תa-z]/gi,'');
-const strip=w=>w.replace(/^[והבלמשכ]{1,2}/,'');
-function detect(a,b){const ws=S.words.slice(Math.max(0,a-2),b+3).map(w=>norm(w.t));
-  return DICT.filter(d=>d.k.some(k=>ws.some(w=>k.length<=2?(w===k||strip(w)===k):(w.includes(k)))))}
-
-/* ============ מצב ============ */
-const LAYERS0=()=>[{id:'bg',name:'רקע עדין',vol:1,mute:false},{id:'fx',name:'אפקטים',vol:1,mute:false}];
-const blank=()=>({id:uid(),name:'מדיטציה חדשה',layers:LAYERS0(),words:[],pauses:[],effects:[],nextN:1,narVol:1,normalize:true,pps:50,narName:''});
-function migrate(){if(!Array.isArray(S.layers)||!S.layers.length)S.layers=LAYERS0();const ids=S.layers.map(l=>l.id);
-  for(const e of S.effects)if(!ids.includes(e.layer))e.layer=(e.type==='ambience'&&ids.includes('bg'))?'bg':(ids.includes('fx')?'fx':ids[0])}
-function layerOf(e){return S.layers.find(l=>l.id===e.layer)||S.layers[0]}
-let S=blank(),narBlob=null,narBuf=null,effBlob={},effBuf={},cur=0,sel=null,hl=null,WT=[];
+/* ================= מצב ================= */
+const TRACKS0=()=>[{id:'voice',name:'קריינות',kind:'voice',vol:1,mute:false,solo:false,duck:false},{id:'bg',name:'רקע עדין',kind:'bg',vol:1,mute:false,solo:false,duck:true},{id:'amb',name:'אווירה',kind:'amb',vol:1,mute:false,solo:false,duck:true},{id:'fx',name:'אפקטים',kind:'fx',vol:1,mute:false,solo:false,duck:false}];
+const blank=()=>({id:uid(),v:2,name:'מדיטציה חדשה',tracks:TRACKS0(),clips:[],srcs:{},narSrc:null,words:[],sentences:[],orders:[],nextN:1,pps:30,selTrack:'voice'});
+let S=blank();const SRC={};
+let cur=0,sel=null,selClip=null,wsel=null,hl=null,clipboard=null;
 let _ac=null;const ac=()=>_ac||(_ac=new (window.AudioContext||window.webkitAudioContext)());
-async function decode(b){const ab=await b.arrayBuffer();return await ac().decodeAudioData(ab)}
+async function decode(b){return await ac().decodeAudioData(await b.arrayBuffer())}
+function peaksOf(buf){const PR=100,d=buf.getChannelData(0),sr=buf.sampleRate,n=Math.ceil(buf.duration*PR),mn=new Float32Array(n),mx=new Float32Array(n);
+  for(let i=0;i<n;i++){const a=Math.floor(i*sr/PR),b=Math.min(d.length,Math.floor((i+1)*sr/PR));let lo=0,hi=0;for(let j=a;j<b;j+=2){const v=d[j];if(v<lo)lo=v;if(v>hi)hi=v}mn[i]=lo;mx[i]=hi}return{mn,mx,PR}}
+async function addSource(blob,name,id){const buf=await decode(blob);id=id||uid();SRC[id]={blob,buf,peaks:peaksOf(buf)};S.srcs[id]={name:name||blob.name||'audio',dur:buf.duration};return id}
+const trk=id=>S.tracks.find(t=>t.id===id);
+const trackOfKind=k=>S.tracks.find(t=>t.kind===k)||S.tracks[0];
+function newClip(o){return Object.assign({id:uid(),track:'voice',src:null,start:0,in:0,len:1,gain:1,fi:0,fo:0,loop:false,ops:[],aw:null,ao:0,full:false,label:'',order:null},o)}
 
-/* ============ IndexedDB ============ */
-let dbp=null;
-function db(){return dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('meditation-studio',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
-async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const tx=d.transaction('p',mode);const r=fn(tx.objectStore('p'));tx.oncomplete=()=>res(r&&r.result);tx.onerror=()=>rej(tx.error)})}
-const setStat=m=>$('#stat').textContent=m;
-let saveT;
-function save(){clearTimeout(saveT);setStat('שומר…');saveT=setTimeout(async()=>{try{await idb('readwrite',s=>s.put({id:S.id,name:S.name,updated:Date.now(),state:JSON.stringify(S),nar:narBlob,effs:{...effBlob}}));LS.set('medi.last',S.id);setStat('נשמר');refreshList()}catch(e){setStat('השמירה נכשלה')}},700)}
-async function refreshList(){try{const all=(await idb('readonly',s=>s.getAll()))||[];all.sort((a,b)=>b.updated-a.updated);const L=$('#plist');
-  L.innerHTML=(all.some(p=>p.id===S.id)?'':`<option value="${S.id}">${esc(S.name)}</option>`)+all.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');L.value=S.id}catch(e){}}
-async function load(id){stop();const r=await idb('readonly',s=>s.get(id));if(!r)return;
-  S=Object.assign(blank(),JSON.parse(r.state));migrate();narBlob=r.nar||null;effBlob=r.effs||{};narBuf=null;effBuf={};cur=0;sel=null;hl=null;
-  try{if(narBlob)narBuf=await decode(narBlob)}catch(e){toast('לא הצלחתי לפתוח את ההקלטה השמורה')}
-  for(const k in effBlob){try{effBuf[k]=await decode(effBlob[k])}catch(e){}}
-  LS.set('medi.last',S.id);renderAll();refreshList()}
+/* ================= זמן: מילים, קליפים ================= */
+let WT=[];
+function narClips(){return S.clips.filter(c=>c.src&&c.src===S.narSrc&&c.aw==null&&!c.full)}
+function recalc(){const N=narClips();WT=S.words.map(w=>{const c=N.find(c=>w.s>=c.in-1e-3&&w.s<c.in+c.len);if(!c)return null;const e=Math.min(w.e,c.in+c.len);return[c.start+(w.s-c.in),c.start+(e-c.in)]});
+  for(const c of S.clips)if(c.aw!=null&&WT[c.aw])c.start=WT[c.aw][0]+c.ao;
+  const ve=voiceEnd();for(const c of S.clips)if(c.full)c.len=Math.max(2,ve+4-c.start)}
+function voiceEnd(){let e=0;for(const c of S.clips)if(!c.full&&trk(c.track)?.kind==='voice')e=Math.max(e,c.start+c.len);if(!e)for(const c of S.clips)if(!c.full)e=Math.max(e,c.start+c.len);return e}
+const ce=c=>c.start+c.len;
+function setStart(c,t){c.start=t;if(c.aw!=null&&WT[c.aw])c.ao=t-WT[c.aw][0]}
+function orderSpan(o){let st,en;if(o.type==='background'){st=0;en=Math.max(10,voiceEnd()+4)}
+  else{st=o.w0!=null&&WT[o.w0]?WT[o.w0][0]:(+o.at||0);
+    if(o.type==='ambience'){const e1=o.w1!=null&&WT[o.w1]?WT[o.w1][1]:st+20;en=Math.max(st+4,e1+2)}else en=st+(+o.dur||3)}
+  return[st,en]}
+function total(){let t=10;for(const c of S.clips)t=Math.max(t,ce(c));for(const o of S.orders)if(!o.clip)t=Math.max(t,orderSpan(o)[1]);return t}
+function speech(){const r=[];S.words.forEach((w,i)=>{const p=WT[i];if(!p)return;const l=r[r.length-1];if(l&&p[0]-l[1]<0.6)l[1]=Math.max(l[1],p[1]);else r.push([p[0],p[1]])});return r}
+function audible(t){return S.tracks.some(x=>x.solo)?t.solo:!t.mute}
+function envAt(c,u,sp){const L=c.len;let f=c.gain;
+  if(c.fi>0&&u<c.fi)f*=clamp(u/c.fi,0,1);if(c.fo>0&&u>L-c.fo)f*=clamp((L-u)/c.fo,0,1);
+  for(const o of c.ops){if(u<o.a||u>o.b)continue;const r=(u-o.a)/((o.b-o.a)||1);f*=o.k==='in'?r:o.k==='out'?1-r:o.k==='mute'?0:o.g}
+  if(sp&&sp.length){const tl=c.start+u,dl=0.4;let m=1;for(const[a,b]of sp){let q=1;if(tl<a-0.5||tl>b+1)q=1;else if(tl<a-0.1)q=1-(1-dl)*((tl-(a-0.5))/0.4);else if(tl<=b+0.2)q=dl;else q=dl+(1-dl)*((tl-(b+0.2))/0.8);m=Math.min(m,q)}f*=m}
+  return Math.max(0,f)}
+function envKeys(c,sp){const L=c.len,T=new Set([0,L,c.fi,L-c.fo]);for(const o of c.ops){T.add(o.a);T.add(o.b);T.add(o.a+0.005);T.add(o.b-0.005);T.add(o.a-0.005);T.add(o.b+0.005)}
+  if(sp)for(const[a,b]of sp){for(const t of[a-0.5,a-0.1,b+0.2,b+1])T.add(t-c.start)}
+  return[...T].filter(u=>u>=0&&u<=L).sort((a,b)=>a-b)}
 
-/* ============ זמן ============ */
-function pts(){return S.pauses.map(p=>({at:S.words[p.w]?.e,sec:+p.sec||0})).filter(p=>p.at!=null).sort((a,b)=>a.at-b.at)}
-function mapT(t){let d=0;for(const p of pts())if(p.at<t-1e-4)d+=p.sec;return t+d}
-function segs(){if(!narBuf)return[];const out=[];let s=0,acc=0;for(const p of pts()){if(p.at>s){out.push({s,e:p.at,o:s+acc});s=p.at}acc+=p.sec}out.push({s,e:narBuf.duration,o:s+acc});return out.filter(x=>x.e>x.s)}
-function wStart(e){return e.abs?(+e.at||0):mapT(S.words[e.w0]?.s??0)}
-function narEnd(){return narBuf?narBuf.duration+pts().reduce((a,p)=>a+p.sec,0):0}
-function rangeLen(e){if(e.full)return Math.max(5,narEnd()+4-(+e.at||0));if(e.abs)return +e.len||20;return mapT(S.words[e.w1]?.e??0)-mapT(S.words[e.w0]?.s??0)+(+e.tail||2)}
-function span(e){const b=effBuf[e.id];const st=Math.max(0,wStart(e)+(+e.off||0));
-  const en=e.type==='ambience'?st+rangeLen(e):st+(b?b.duration:(+e.dur||3));return[st,en]}
-function total(withPlan){let t=narBuf?narBuf.duration+pts().reduce((a,p)=>a+p.sec,0):0;
-  for(const e of S.effects)if(withPlan||effBuf[e.id])t=Math.max(t,span(e)[1]);return Math.max(t,1)}
-function speech(){const r=[];for(const w of S.words){const s=mapT(w.s),e=mapT(w.e);const l=r[r.length-1];if(l&&s-l[1]<0.6)l[1]=Math.max(l[1],e);else r.push([s,e])}return r}
-function gen(e){const amb=e.type==='ambience';return{dur:amb?Math.min(30,Math.max(10,Math.ceil(rangeLen(e)))):(+e.dur||3),infl:amb?0.3:e.type==='transition'?0.45:0.6,loop:amb}}
-
-/* ============ פרומפט והסבר ============ */
-const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
-const TYPE_EN={ambience:'continuous steady background ambience with a consistent level, no sudden events, seamless loop',oneshot:'a single isolated sound with a soft clean start and a natural gentle fade-out, no background noise',transition:'a smooth gradual swell with a soft attack and a slow release, no hard hit'};
-const INT_EN={vsoft:'very soft, distant and quiet',soft:'soft and gentle',present:'clear and present but still gentle'};
-function kidsEn(e){return "soothing and calming for a children's guided meditation, warm tone, no harsh or high-pitched sounds, nothing scary, no voices"+(e.music?'':', no music')}
-function buildPrompt(e){const base=(e.en||'').trim().replace(/[.,\s]+$/,'')||'[describe the sound in English]';
-  return `${cap(base)}, ${INT_EN[e.intensity]||INT_EN.soft}. ${cap(TYPE_EN[e.type])}. ${cap(kidsEn(e))}. High quality stereo recording.`}
-function dictOf(e){return DICT.find(d=>d.en===e.en)}
-function explain(e){const g=gen(e),amb=e.type==='ambience',d=dictOf(e),R=rangeLen(e);
-  const why=[`"${(e.en||'').trim()}": זה הבסיס, והוא מתאר מה בדיוק נשמע. ElevenLabs עובד הכי טוב עם תיאור פיזי וקונקרטי (מה מקור הצליל, על מה הוא נופל, מאיזה מרחק), ופחות טוב עם רגש כללי כמו "מרגיע".`,
-   amb?`"continuous steady background ambience… seamless loop" מבקש משטח רציף בלי אירועים בולטים. כך הרקע לא קופץ באמצע משפט, ואפשר לחבר אותו בלופ בלי שישמעו את התפר.`
-   :e.type==='oneshot'?`"a single isolated sound… gentle fade-out, no background noise" מבקש צליל אחד נקי בלי רעש רקע. כך אפשר להניח אותו בדיוק על המילה בלי שיגרור איתו אווירה אחרת.`
-   :`"a smooth gradual swell, soft attack" מבקש מעבר שמתנפח לאט במקום מכה, כדי לסמן שינוי סצנה בלי להקפיץ את הילד.`,
-   `"${INT_EN[e.intensity]||INT_EN.soft}" קובע מרחק ועוצמה. ${e.intensity==='vsoft'?'רך ורחוק מתאים לשלבי הרפיה עמוקה.':e.intensity==='present'?'נוכח מתאים לרגע שצריך לשים לב אליו, אבל עדיין בלי חדות.':'רך הוא ברירת המחדל הבטוחה למדיטציה.'}`,
-   `"…for a children's guided meditation… nothing scary, no voices${e.music?'':', no music'}" מונע צלילים חדים או גבוהים, משהו מאיים, ודיבור${e.music?'':' או מנגינה'} שיתחרו בקול שלך.`];
-  if(d)why.push(d.tip);
-  const set=[`משך ${g.dur} שניות. `+(amb?(R>30?`הקטע אורך ${fmt0(R)}, ו-ElevenLabs מייצר עד 30 שניות, לכן הכלי ינגן את הקובץ בלופ לכל האורך.`:`זה מכסה את הקטע (${Math.round(R)} ש׳) עם מרווח לדעיכה.`):e.type==='transition'?'מספיק להתנפחות ולדעיכה.':'מספיק לצליל ולדעיכה הטבעית שלו. משך ארוך יותר נותן לרוב צליל שחוזר על עצמו או רעש.'),
-   `Prompt influence: ${g.infl}. `+(amb?'ערך נמוך נותן למודל חופש ליצור רקע טבעי ומגוון.':'ערך בינוני-גבוה מחייב את המודל להיצמד לתיאור, וזה חשוב בצליל שצריך להיות בדיוק מה שביקשת.'),
-   `Loop: ${g.loop?'להפעיל אם האפשרות מופיעה, כדי שסוף הקובץ יתחבר להתחלה בלי קפיצה.':'כבוי.'}`,
-   'כדאי לייצר 3–4 גרסאות ולבחור את הרכה והנקייה מביניהן.'];
-  const listen=amb?['האם העוצמה אחידה לאורך כל הקובץ?','האם אין אירועים פתאומיים, כמו רעם, ציפור צורחת או משב חזק?','האם נעים להקשיב לזה 30 שניות ברצף בלי להתעייף?']
-   :e.type==='oneshot'?['האם הצליל מתחיל מיד, בלי שקט ארוך לפניו?','האם יש צליל אחד ולא רצף של כמה?','האם הוא לא חד מדי לאוזניים של ילד?']
-   :['האם יש התנפחות הדרגתית, בלי מכה בהתחלה?','האם הוא דועך לשקט ולא נקטע?'];
-  const fix=['חזק או חד מדי: להוסיף בסוף הפרומפט "muffled, distant, very soft, low-pass filtered".','נשמע מלאכותי: להוריד את Prompt influence ב-0.1 ולנסות שוב.','לא מה שביקשת: להעלות את Prompt influence ב-0.1–0.2, או לתאר את מקור הצליל בצורה פיזית יותר (חומר, מרחק, מקום).','נכנסו מוזיקה או דיבור: לכתוב בתחילת הפרומפט "No music, no speech:".'];
-  if(amb)fix.push('יש בו קפיצות: להוסיף "very consistent, uneventful, steady".');
-  if(e.type==='oneshot')fix.push('יש כמה צלילים: להוסיף "only one single sound, then silence" ולקצר את המשך.');
-  return{why,set,listen,fix}}
-function explainHTML(e){const x=explain(e);const L=a=>`<ul>${a.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;
-  return `<h4>למה הפרומפט בנוי כך</h4>${L(x.why)}<h4>ההגדרות ב-ElevenLabs</h4>${L(x.set)}<h4>מה לבדוק כשמקשיבים</h4>${L(x.listen)}<h4>אם התוצאה לא טובה</h4>${L(x.fix)}`}
-function fname(e){const sl=(e.en||'effect').toLowerCase().replace(/[^a-z ]/g,'').trim().split(/\s+/).filter(w=>!['a','an','the','of','on','with','and'].includes(w)).slice(0,3).join('-')||'effect';return String(e.n).padStart(2,'0')+'_'+sl+'.mp3'}
-function ctxWords(e){if(e.abs||!S.words.length)return'';const W=S.words;const a=e.w0,b=e.w1;
-  if(b-a>12)return W.slice(a,a+6).map(w=>w.t).join(' ')+' … '+W.slice(b-3,b+1).map(w=>w.t).join(' ');return W.slice(a,b+1).map(w=>w.t).join(' ')}
-
-/* ============ אודיו: תזמון, נגינה, ייצוא ============ */
-function chain(c){const m=c.createGain();const k=c.createDynamicsCompressor();k.threshold.value=-3;k.knee.value=0;k.ratio.value=20;k.attack.value=.003;k.release.value=.25;m.connect(k);k.connect(c.destination);return m}
-function envPts(e,st,en){const v=(+e.vol)*(+(layerOf(e).vol??1)),fi=Math.max(0,+e.fi||0),fo=Math.max(0,+e.fo||0);
-  const fade=t=>{let f=1;if(fi>0&&t<st+fi)f=Math.min(f,(t-st)/fi);if(fo>0&&t>en-fo)f=Math.min(f,(en-t)/fo);return Math.max(0,Math.min(1,f))};
-  const dl=e.type==='ambience'&&e.duck?0.45:1;const sp=dl<1?speech().filter(([a,b])=>b>st-1&&a<en+1):[];
-  const duck=t=>{let m=1;for(const[a,b]of sp){let f;if(t<a-0.5||t>b+1)f=1;else if(t<a-0.1)f=1-(1-dl)*((t-(a-0.5))/0.4);else if(t<=b+0.2)f=dl;else f=dl+(1-dl)*((t-(b+0.2))/0.8);m=Math.min(m,f)}return m};
-  const T=new Set([st,en,st+fi,en-fo]);for(const[a,b]of sp){T.add(a-0.5);T.add(a-0.1);T.add(b+0.2);T.add(b+1)}
-  return[...T].filter(t=>t>=st&&t<=en).sort((a,b)=>a-b).map(t=>[t,v*fade(t)*duck(t)])}
-function sched(c,out,when,from){const N=[];const at=t=>when+Math.max(0,t-from);
-  if(narBuf){const g=c.createGain();g.gain.value=+S.narVol;g.connect(out);
-    for(const sg of segs()){const len=sg.e-sg.s;if(sg.o+len<=from)continue;const skip=Math.max(0,from-sg.o);const src=c.createBufferSource();src.buffer=narBuf;src.connect(g);src.start(at(sg.o),sg.s+skip,len-skip);N.push(src)}}
-  for(const e of S.effects){const b=effBuf[e.id];if(!b||e.mute||layerOf(e).mute)continue;const[st,en]=span(e);if(en<=from)continue;
-    const loop=e.type==='ambience'&&e.loop;let off=Math.max(0,from-st);if(!loop&&off>=b.duration)continue;if(loop)off%=b.duration;
-    const src=c.createBufferSource();src.buffer=b;src.loop=loop;const g=c.createGain();src.connect(g);g.connect(out);
-    const P=envPts(e,st,en);const t0=Math.max(st,from);
-    const vAt=t=>{if(t<=P[0][0])return P[0][1];for(let i=1;i<P.length;i++)if(t<=P[i][0]){const[a,va]=P[i-1],[b2,vb]=P[i];return va+(vb-va)*((t-a)/((b2-a)||1))}return P[P.length-1][1]};
-    g.gain.setValueAtTime(vAt(t0),at(t0));for(const[t,v]of P)if(t>t0)g.gain.linearRampToValueAtTime(v,at(t));
-    src.start(at(st),off);if(e.type==='ambience')src.stop(at(en));N.push(src)}
+/* ================= אודיו: ניגון וייצוא ================= */
+function chain(c){const m=c.createGain();const k=c.createDynamicsCompressor();k.threshold.value=-2;k.knee.value=0;k.ratio.value=20;k.attack.value=.003;k.release.value=.25;m.connect(k);k.connect(c.destination);return m}
+function sched(c,out,when,from,only){recalc();const N=[],at=t=>when+Math.max(0,t-from),SP=speech();
+  for(const cl of S.clips){const T=trk(cl.track);if(!T||!audible(T))continue;if(only&&!only.includes(T.id))continue;const s=SRC[cl.src];if(!s)continue;const b=s.buf;
+    const st=cl.start,en=ce(cl);if(en<=from)continue;const skip=Math.max(0,from-st);
+    const src=c.createBufferSource();src.buffer=b;const g=c.createGain();src.connect(g);g.connect(out);
+    const sp=T.duck?SP:null,keys=envKeys(cl,sp),tv=+T.vol;
+    g.gain.setValueAtTime(envAt(cl,skip,sp)*tv,at(st+skip));for(const u of keys)if(u>skip)g.gain.linearRampToValueAtTime(envAt(cl,u,sp)*tv,at(st+u));
+    if(cl.loop){src.loop=true;src.loopStart=0;src.loopEnd=b.duration;src.start(at(st),(cl.in+skip)%b.duration);src.stop(at(en))}
+    else{const off=cl.in+skip;if(off>=b.duration)continue;src.start(at(st),off,Math.min(cl.len-skip,b.duration-off))}
+    N.push(src)}
   return N}
 let playing=null;
 function pos(){return playing?playing.from+Math.max(0,ac().currentTime-playing.when):cur}
-function play(){if(playing){stop();return}if(!narBuf&&!S.effects.some(e=>effBuf[e.id]))return;const c=ac();c.resume();if(cur>=total(false)-0.05)cur=0;
-  const when=c.currentTime+.06,out=chain(c);playing={nodes:sched(c,out,when,cur),when,from:cur,out};$('#play').textContent='עצירה';requestAnimationFrame(tick)}
-function stop(){if(!playing)return;cur=pos();playing.nodes.forEach(n=>{try{n.stop()}catch(e){}});try{playing.out.disconnect()}catch(e){}playing=null;$('#play').textContent='נגינה';placePH()}
-let liveT;function live(){clearTimeout(liveT);liveT=setTimeout(()=>{if(playing){const p=pos();stop();cur=p;play()}},160)}
-function seekTo(t){const was=!!playing;if(was)stop();cur=Math.max(0,t);placePH();hiNow(cur);if(was)play()}
-function tick(){if(!playing)return;const p=pos();if(p>=total(false)+0.1){stop();cur=0;placePH();return}
-  placePH(p);hiNow(p);const x=X(p),sc=$('#sc'),w=sc.clientWidth;if(x<sc.scrollLeft+40||x>sc.scrollLeft+w)sc.scrollLeft=x-w+60;requestAnimationFrame(tick)}
-async function renderMix(){const T=total(false),sr=44100;const c=new OfflineAudioContext(2,Math.ceil(T*sr)+sr,sr);sched(c,chain(c),0,0);const b=await c.startRendering();
-  if(S.normalize){let pk=0;for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
+function play(){if(playing){stop();return}const c=ac();c.resume();if(cur>=total()-0.05&&!rec)cur=0;
+  const when=c.currentTime+.05,out=chain(c);out.gain.value=1;playing={nodes:sched(c,out,when,cur,rec?S.tracks.filter(t=>t.id!==rec.track).map(t=>t.id):null),when,from:cur,out};updPlay();requestAnimationFrame(tick)}
+function stop(){if(rec){rec.mr.stop();return}if(!playing)return;cur=pos();playing.nodes.forEach(n=>{try{n.stop()}catch(e){}});try{playing.out.disconnect()}catch(e){}playing=null;updPlay();placePH()}
+function updPlay(){const b=$('#play');b.classList.toggle('on',!!playing);b.innerHTML=playing?'<svg class="i"><use href="#i-stop"/></svg><span>עצירה</span>':'<svg class="i"><use href="#i-play"/></svg><span>נגינה</span>'}
+let liveT;function live(){clearTimeout(liveT);liveT=setTimeout(()=>{if(playing&&!rec){const p=pos();stop();cur=p;play()}},150)}
+function seekTo(t){const was=!!playing&&!rec;if(was)stop();cur=Math.max(0,t);placePH();hiNow(cur);if(was)play()}
+function tick(){if(!playing)return;const p=pos();if(!rec&&p>=total()+0.1){stop();cur=0;placePH();return}
+  placePH(p);hiNow(p);if(rec)drawRec(p);const x=X(p),w=sc.clientWidth;if(x<sc.scrollLeft+40||x>sc.scrollLeft+w)sc.scrollLeft=x-w+80;requestAnimationFrame(tick)}
+async function renderMix(only){recalc();const T=total(),sr=44100;const c=new OfflineAudioContext(2,Math.ceil(T*sr)+sr,sr);sched(c,chain(c),0,0,only);let b=await c.startRendering();
+  let end=b.length;const L=b.getChannelData(0),R=b.getChannelData(1);while(end>sr&&Math.abs(L[end-1])<1e-4&&Math.abs(R[end-1])<1e-4)end--;end=Math.min(b.length,end+Math.floor(sr*0.5));
+  if(end<b.length){const nb=new AudioBuffer({length:end,sampleRate:sr,numberOfChannels:2});nb.copyToChannel(L.subarray(0,end),0);nb.copyToChannel(R.subarray(0,end),1);b=nb}
+  if($('#nrm').checked&&!only){let pk=0;for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
     if(pk>0){const g=Math.min(4,0.89/pk);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]*=g}}}
   return b}
-function toWav(b){const n=b.length,ch=2,sr=b.sampleRate,buf=new ArrayBuffer(44+n*ch*2),v=new DataView(buf);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+function toWav(b,ch=2){const n=b.length,sr=b.sampleRate,buf=new ArrayBuffer(44+n*ch*2),v=new DataView(buf);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
   w(0,'RIFF');v.setUint32(4,36+n*ch*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*ch*2,true);v.setUint16(32,ch*2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*ch*2,true);
-  const L=b.getChannelData(0),R=b.getChannelData(1);let o=44;for(let i=0;i<n;i++){for(const d of[L,R]){const s=Math.max(-1,Math.min(1,d[i]));v.setInt16(o,s<0?s*0x8000:s*0x7fff,true);o+=2}}
+  const C=[...Array(ch)].map((_,i)=>b.getChannelData(Math.min(i,b.numberOfChannels-1)));let o=44;for(let i=0;i<n;i++)for(const d of C){const s=clamp(d[i],-1,1);v.setInt16(o,s<0?s*0x8000:s*0x7fff,true);o+=2}
   return new Blob([buf],{type:'audio/wav'})}
-function loadScript(src){return new Promise((res,rej)=>{if(window.lamejs)return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
-async function toMp3(b){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js');const enc=new lamejs.Mp3Encoder(2,b.sampleRate,160);
-  const f2i=d=>{const o=new Int16Array(d.length);for(let i=0;i<d.length;i++){const s=Math.max(-1,Math.min(1,d[i]));o[i]=s<0?s*0x8000:s*0x7fff}return o};
-  const L=f2i(b.getChannelData(0)),R=f2i(b.getChannelData(1)),out=[];
-  for(let i=0;i<L.length;i+=1152){const m=enc.encodeBuffer(L.subarray(i,i+1152),R.subarray(i,i+1152));if(m.length)out.push(new Int8Array(m))}
+const LAME='https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js';
+async function toMp3(b,ch=2,kbps=192){await loadScript(LAME,()=>window.lamejs);const enc=new lamejs.Mp3Encoder(ch,b.sampleRate,kbps);
+  const f2i=d=>{const o=new Int16Array(d.length);for(let i=0;i<d.length;i++){const s=clamp(d[i],-1,1);o[i]=s<0?s*0x8000:s*0x7fff}return o};
+  const L=f2i(b.getChannelData(0)),R=ch>1?f2i(b.getChannelData(Math.min(1,b.numberOfChannels-1))):null,out=[];
+  for(let i=0;i<L.length;i+=1152){const m=ch>1?enc.encodeBuffer(L.subarray(i,i+1152),R.subarray(i,i+1152)):enc.encodeBuffer(L.subarray(i,i+1152));if(m.length)out.push(new Int8Array(m))}
   const f=enc.flush();if(f.length)out.push(new Int8Array(f));return new Blob(out,{type:'audio/mpeg'})}
-async function exportMix(kind){if(!narBuf){toast('אין הקלטה');return}stop();const btn=$('#'+kind),old=btn.textContent;btn.disabled=true;btn.textContent='מכין…';
-  try{const b=await renderMix();let blob;if(kind==='mp3'){try{blob=await toMp3(b)}catch(e){toast('קידוד MP3 נכשל, יורד WAV במקום');blob=toWav(b);kind='wav'}}else blob=toWav(b);
-    dl(blob,safe(S.name)+'.'+kind);const miss=S.effects.filter(e=>!effBuf[e.id]).length;toast(miss?`הקובץ ירד (${miss} אפקטים עוד בלי קובץ)`:'הקובץ ירד')}
+async function exportAudio(kind){if(!S.clips.some(c=>SRC[c.src])){toast('אין עדיין שמע לייצא');return}stop();const btn=$(kind==='mp3'?'#emp3':'#ewav'),old=btn.textContent;btn.disabled=true;btn.textContent='מכין…';
+  try{const b=await renderMix();let blob;if(kind==='mp3'){try{blob=await toMp3(b)}catch(e){toast('קידוד MP3 נכשל, יורד WAV');blob=toWav(b);kind='wav'}}else blob=toWav(b);dl(blob,safe(S.name)+'.'+kind);toast('הקובץ ירד')}
   catch(e){toast('הייצוא נכשל: '+e.message)}finally{btn.disabled=false;btn.textContent=old}}
 
-/* ============ קבצים ============ */
-async function setNarration(file){try{const buf=await decode(file);
-  if(S.words.length){if(!await confirmBox('להחליף את ההקלטה?','התמלול וההפסקות יימחקו. האפקטים יישארו במקום שלהם בזמן.','החלפה'))return;
-    for(const e of S.effects)if(!e.abs){const st=wStart(e);const len=rangeLen(e);e.abs=true;e.at=st;e.len=Math.round(len)}S.words=[];S.pauses=[]}
-  narBlob=file;narBuf=buf;S.narName=file.name;if(S.name==='מדיטציה חדשה')S.name=file.name.replace(/\.[^.]+$/,'');cur=0;sel=null;save();renderAll()
-  if(LS.get('medi.key',''))transcribe()}
-  catch(e){toast('לא הצלחתי לקרוא את קובץ השמע')}}
-async function setEffectFile(id,file){const e=S.effects.find(x=>x.id===id);if(!e)return;try{effBuf[id]=await decode(file);effBlob[id]=file;e.file=file.name;save();renderFx();layoutTL();live();toast(`אפקט ${e.n} נטען`)}catch(x){toast('לא הצלחתי לקרוא את הקובץ')}}
-async function b64(blob){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(blob)})}
-async function exportProj(){setStat('מכין קובץ…');const o={app:'meditation-studio',v:1,state:S,nar:narBlob?{name:S.narName||'narration',d:await b64(narBlob)}:null,effs:{}};
-  for(const k in effBlob)o.effs[k]={name:effBlob[k].name||'fx',d:await b64(effBlob[k])};dl(new Blob([JSON.stringify(o)],{type:'application/json'}),safe(S.name)+'.meditation.json');setStat('נשמר לקובץ')}
-async function importProj(file){try{const o=JSON.parse(await file.text());if(o.app!=='meditation-studio')throw new Error('x');stop();
-  const fromD=async x=>{const r=await fetch(x.d);const b=await r.blob();return new File([b],x.name,{type:b.type})};
-  S=Object.assign(blank(),o.state,{id:uid()});migrate();narBlob=o.nar?await fromD(o.nar):null;narBuf=narBlob?await decode(narBlob):null;effBlob={};effBuf={};
-  for(const k in o.effs||{}){effBlob[k]=await fromD(o.effs[k]);try{effBuf[k]=await decode(effBlob[k])}catch(e){}}
-  cur=0;sel=null;save();renderAll();toast('הפרויקט נפתח')}catch(e){toast('זה לא קובץ פרויקט של הסטודיו')}}
+/* ================= ביטול וחזרה ================= */
+let U=[],RD=[];
+const snap=()=>JSON.stringify({tracks:S.tracks,clips:S.clips,srcs:S.srcs,narSrc:S.narSrc,words:S.words,sentences:S.sentences,orders:S.orders,nextN:S.nextN});
+function pushUndo(){U.push(snap());if(U.length>80)U.shift();RD=[]}
+function restore(j){Object.assign(S,JSON.parse(j));selClip=null;sel=null;renderAll();save()}
+function undo(){if(!U.length)return;RD.push(snap());restore(U.pop());toast('בוטל')}
+function redo(){if(!RD.length)return;U.push(snap());restore(RD.pop())}
 
-/* ============ תמלול ============ */
-function tStat(m,err){for(const id of['#tst','#txst']){const e=$(id);if(e){e.textContent=m;e.className=err?'err':(id==='#txst'?'mut':'')}}}
-let trBusy=false;
-function trUI(busy){trBusy=busy;['#trb','#txgo'].forEach(id=>{const b=$(id);if(b)b.disabled=busy})}
-function applyWords(words,final){S.words=words.filter(w=>w.t&&isFinite(w.s)&&isFinite(w.e)).map(w=>({t:w.t,s:Math.max(0,w.s),e:Math.max(w.s,w.e)}));
-  if(final){S.pauses=[];S.effects=S.effects.filter(e=>e.abs);sel=null}
-  renderSrc();renderTx();renderSel();renderFx();layoutTL()}
-async function transcribe(){if(trBusy)return;
-  {const ki=$('#txkey');if(ki&&ki.value.trim())LS.set('medi.key',ki.value.trim());if(!LS.get('medi.key','')){tStat('צריך להדביק קודם את מפתח ה-API',true);ki?ki.focus():openSettings();return}}
-  if(S.words.length&&!await confirmBox('לתמלל מחדש?','התמלול הנוכחי, ההפסקות והאפקטים שקשורים למילים יימחקו.','תמלול מחדש'))return;
-  if(S.words.length){S.words=[];S.pauses=[];S.effects=S.effects.filter(e=>e.abs);sel=null;renderAll()}
-  trUI(true);
-  try{const words=await trEleven();
-    if(!words.length)throw new Error('לא זוהו מילים בהקלטה. כדאי לבדוק שהשפה בהגדרות נכונה');
-    applyWords(words,true);save();tStat(`תומללו ${S.words.length} מילים`)}
-  catch(e){tStat('התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור (אינטרנט, חוסם פרסומות, או שהדפדפן חסם את הפנייה)':e.message),true)}
-  finally{trUI(false)}}
-async function trEleven(){tStat('מתמלל ב-ElevenLabs… (בערך דקה לכל 10 דקות הקלטה)');
-  const fd=new FormData();fd.append('file',narBlob,S.narName||'audio.mp3');fd.append('model_id',LS.get('medi.model','scribe_v1'));const lang=LS.get('medi.lang','he');if(lang)fd.append('language_code',lang);
-  fd.append('timestamps_granularity','word');fd.append('tag_audio_events','false');
-  const r=await fetch('https://api.elevenlabs.io/v1/speech-to-text',{method:'POST',headers:{'xi-api-key':LS.get('medi.key','')},body:fd});const j=await r.json().catch(()=>({}));
-  if(!r.ok){const m=j?.detail?.message||j?.detail||r.statusText;throw new Error(r.status===401?'מפתח ה-API לא תקין':String(typeof m==='string'?m:JSON.stringify(m)))}
-  return(j.words||[]).filter(w=>w.type==='word'&&String(w.text).trim()).map(w=>({t:String(w.text).trim(),s:+w.start,e:+w.end}))}
+/* ================= פעולות עריכה ================= */
+function selTracks(){return sel?sel.tracks:[S.selTrack]}
+function splitAt(t,tids){const out=[];for(const c of[...S.clips]){if(!tids.includes(c.track))continue;if(!(t>c.start+0.01&&t<ce(c)-0.01))continue;
+    const d=t-c.start,b=SRC[c.src]?.buf;const r=JSON.parse(JSON.stringify(c));r.id=uid();r.full=false;c.full=false;
+    r.in=c.loop&&b?(c.in+d)%b.duration:c.in+d;r.len=c.len-d;r.ops=c.ops.map(o=>({...o,a:o.a-d,b:o.b-d}));r.fi=0;c.fo=0;c.len=d;
+    if(c.aw!=null){r.ao=c.ao+d}else r.start=t;r.start=t;S.clips.push(r);out.push(r)}return out}
+function cutRange(a,b,tids,ripple){splitAt(a,tids);splitAt(b,tids);
+  S.clips=S.clips.filter(c=>!(tids.includes(c.track)&&c.start>=a-1e-3&&ce(c)<=b+1e-3));
+  if(ripple)for(const c of S.clips)if(tids.includes(c.track)&&c.aw==null&&c.start>=b-1e-3)c.start-=b-a}
+function opRange(a,b,tids,op){for(const c of S.clips){if(!tids.includes(c.track))continue;const u0=Math.max(a,c.start)-c.start,u1=Math.min(b,ce(c))-c.start;if(u1-u0<0.01)continue;c.ops.push({...op,a:u0,b:u1})}}
+function needSel(){if(!sel||sel.b-sel.a<0.02){toast('קודם מסמנים קטע: גוררים על השכבה');return false}return true}
+function doDelete(ripple){if(sel&&sel.b-sel.a>0.02){pushUndo();cutRange(sel.a,sel.b,sel.tracks,ripple);if(ripple)cur=sel.a;sel=null;afterEdit();return}
+  if(selClip){const c=S.clips.find(x=>x.id===selClip);if(!c)return;pushUndo();S.clips=S.clips.filter(x=>x!==c);const o=S.orders.find(o=>o.clip===c.id);if(o){o.clip=null}selClip=null;afterEdit();return}
+  toast('קודם מסמנים קטע או לוחצים על קליפ')}
+function doSplit(){pushUndo();const r=splitAt(cur,sel?sel.tracks:(selClip?[S.clips.find(c=>c.id===selClip)?.track]:S.tracks.map(t=>t.id)));if(!r.length){U.pop();toast('אין קליפ במיקום הסמן')}afterEdit()}
+function doFade(k){if(!needSel())return;pushUndo();opRange(sel.a,sel.b,sel.tracks,{k});afterEdit()}
+function doGain(){if(!needSel())return;const d=$('#gaind');d.returnValue='';d.showModal()}
+$('#gval').oninput=e=>$('#gdb').textContent=e.target.value;
+$('#gaind').addEventListener('close',()=>{if($('#gaind').returnValue!=='ok'||!sel)return;pushUndo();opRange(sel.a,sel.b,sel.tracks,{k:'g',g:Math.pow(10,(+$('#gval').value)/20)});afterEdit()});
+function doCopy(){if(!sel||sel.b-sel.a<0.02){toast('מסמנים קטע להעתקה');return}const items=[];
+  for(const c of S.clips){if(!sel.tracks.includes(c.track))continue;const a=Math.max(sel.a,c.start),b=Math.min(sel.b,ce(c));if(b-a<0.01)continue;const d=a-c.start,buf=SRC[c.src]?.buf;
+    items.push({track:c.track,rel:a-sel.a,clip:{...JSON.parse(JSON.stringify(c)),in:c.loop&&buf?(c.in+d)%buf.duration:c.in+d,len:b-a,ops:c.ops.map(o=>({...o,a:o.a-d,b:o.b-d})),fi:0,fo:0,aw:null,ao:0,full:false,order:null}})}
+  clipboard=items;toast(`הועתקו ${items.length} קליפים`)}
+function doPaste(){if(!clipboard||!clipboard.length){toast('אין מה להדביק');return}pushUndo();for(const it of clipboard){const c={...JSON.parse(JSON.stringify(it.clip)),id:uid(),track:trk(it.track)?it.track:S.selTrack,start:cur+it.rel};S.clips.push(c)}afterEdit()}
+function insertSilence(t,secs){const tids=S.tracks.filter(x=>x.kind==='voice').map(x=>x.id);pushUndo();splitAt(t,tids);for(const c of S.clips)if(tids.includes(c.track)&&c.aw==null&&!c.full&&c.start>=t-1e-3)c.start+=secs;afterEdit()}
+function afterEdit(){save();renderAll();live()}
 
+/* ================= הקלטה ================= */
+let rec=null;
+async function toggleRec(){if(rec){rec.mr.stop();return}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}catch(e){toast('אין גישה למיקרופון. צריך לאשר גישה בדפדפן');return}
+  if(playing)stop();const tid=trk(S.selTrack)?S.selTrack:'voice';const mr=new MediaRecorder(stream),chunks=[];mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec={mr,t0:cur,track:tid};
+  mr.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const r=rec;rec=null;if(playing){playing.nodes.forEach(n=>{try{n.stop()}catch(e){}});try{playing.out.disconnect()}catch(e){}playing=null}updPlay();updRec();
+    $('#recl')?.remove();const blob=new Blob(chunks,{type:mr.mimeType||'audio/webm'});
+    try{const id=await addSource(blob,'הקלטה '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}));pushUndo();
+      S.clips.push(newClip({track:r.track,src:id,start:r.t0,len:SRC[id].buf.duration,label:S.srcs[id].name}));
+      if(!S.narSrc&&trk(r.track).kind==='voice')S.narSrc=id;cur=r.t0+SRC[id].buf.duration;afterEdit();toast('ההקלטה נשמרה')}catch(e){toast('ההקלטה נכשלה')}};
+  mr.start(250);updRec();play()}
+function updRec(){const on=!!rec;$('#recb').classList.toggle('on',on);$('#recb span').textContent=on?'עצירת הקלטה':'הקלטה';$('#ph').classList.toggle('rec',on)}
+function drawRec(p){let el=$('#recl');const r=rowOf(rec.track);if(!r)return;if(!el){el=document.createElement('div');el.id='recl';el.className='recclip';$('#ov').appendChild(el)}
+  el.style.left=X(p)+'px';el.style.width=Math.max(2,(p-rec.t0)*S.pps)+'px';el.style.top=(r.y+2)+'px';el.style.height=(r.h-4)+'px'}
 
+/* ================= ייבוא קבצים ================= */
+async function importFiles(files,at,tid){files=[...files].filter(f=>f.type.startsWith('audio')||f.type.startsWith('video')||/\.(mp3|wav|m4a|ogg|aac|webm|flac)$/i.test(f.name));if(!files.length)return;
+  setStat('טוען…');pushUndo();let t=at??cur;
+  for(const f of files){try{const id=await addSource(f,f.name);const empty=!S.clips.some(c=>SRC[c.src]);
+      const track=empty?'voice':(tid||S.selTrack||'voice');S.clips.push(newClip({track:trk(track)?track:S.tracks[0].id,src:id,start:empty?0:t,len:SRC[id].buf.duration,label:f.name.replace(/\.[^.]+$/,'')}));
+      if(empty){S.narSrc=id;if(S.name==='מדיטציה חדשה')S.name=f.name.replace(/\.[^.]+$/,'')}t+=SRC[id].buf.duration}
+    catch(e){toast('לא הצלחתי לקרוא את '+f.name)}}
+  afterEdit();fitZoom()}
 
-/* ============ רינדור ============ */
-const RH=20,WH=110,WLH=26,FXR=30;
-function renderAll(){const has=!!narBuf;$('#load').hidden=has;$('#studio').hidden=!has;$('#bar').hidden=!has;$('#pname').value=S.name;$('#nv').value=S.narVol;$('#nrm').checked=!!S.normalize;
-  if(!has)return;renderSrc();renderTx();renderSel();renderLayers();renderFx();layoutTL(true);updTime()}
-function renderSrc(){const tw=S.words.length;$('#srcbar').innerHTML=`<span class="nm">${esc(S.narName)}</span><span class="mut">${fmt0(narBuf.duration)}${tw?` · ${tw} מילים`:''}${S.pauses.length?` · ${S.pauses.length} הפסקות`:''}</span>
-  <button id="trb" class="${tw?'':'pri'}">${tw?'תמלול מחדש':'תמלול עם ElevenLabs'}</button><span id="tst"></span><span style="flex:1"></span><label class="btn sm ghost">החלפת הקלטה<input type="file" id="rfile" accept="audio/*,.m4a" hidden></label>`}
-function renderTx(){const tx=$('#tx');WT=S.words.map(w=>[mapT(w.s),mapT(w.e)]);
-  if(!S.words.length){const hasKey=!!LS.get('medi.key','');
-    tx.innerHTML=`<div class="trbox"><b>כאן יופיע כל מה שנאמר בהקלטה, מילה אחרי מילה.</b>
-    ${hasKey?'':`<label>מפתח API של ElevenLabs <small>פעם אחת בלבד. elevenlabs.io ← Developers ← API Keys ← Create API Key (עם הרשאת Speech to Text). נשמר רק בדפדפן הזה.</small><input id="txkey" type="password" dir="ltr" autocomplete="off" placeholder="sk_..."></label>`}
-    <div class="row"><button id="txgo" class="pri">תמלול ההקלטה</button><span id="txst" class="mut"></span></div></div>`;return}
-  const mk=S.words.map(()=>({c:'',n:''}));
-  for(const e of S.effects){if(e.abs)continue;if(e.type==='ambience'){for(let i=e.w0;i<=e.w1&&i<mk.length;i++)mk[i].c+=' m-amb'}else if(mk[e.w0])mk[e.w0].c+=' m-one';if(mk[e.w0])mk[e.w0].n+=`<sup class="t-${e.type}">${e.n}</sup>`}
-  const pz={};S.pauses.forEach((p,i)=>{(pz[p.w]=pz[p.w]||[]).push(i)});
-  tx.innerHTML=S.words.map((w,i)=>{const nx=S.words[i+1];const br=nx&&nx.s-w.e>1.6?'<br>':'';
-    return `<span class="w${mk[i].c}${sel&&i>=sel.a&&i<=sel.b?' s':''}" data-i="${i}">${mk[i].n}${esc(w.t)}</span>${(pz[i]||[]).map(k=>`<button class="pz" data-p="${k}" title="לחיצה להסרה">הפסקה ${S.pauses[k].sec} ש׳ ✕</button>`).join('')} ${br}`}).join('')}
-function renderSel(){const b=$('#selbar');if(!sel||!S.words.length){b.hidden=true;return}b.hidden=false;
-  const t=S.words.slice(sel.a,sel.b+1).map(w=>w.t).join(' ');const ex=S.pauses.find(p=>p.w===sel.b);
-  b.innerHTML=`<span class="q">«${esc(t.length>60?t.slice(0,60)+'…':t)}»</span><span class="tm">${fmt0(WT[sel.a]?.[0])}</span><button data-a="fx" class="pri sm">הוספת אפקט כאן</button>
-   <span class="pzc">הפסקה אחרי: ${[2,3,5,8].map(s=>`<button data-a="pz" data-s="${s}" class="sm${ex&&+ex.sec===s?' pri':''}">${s} ש׳</button>`).join('')}</span><button data-a="x" class="ghost sm">ביטול בחירה</button>`}
-function cardHTML(e){const[st,en]=span(e),has=!!effBuf[e.id],amb=e.type==='ambience',g=gen(e);
-  return `<article class="fxc t-${e.type}${hl===e.id?' hl':''}" data-id="${e.id}">
-  <header><span class="num">${e.n}</span><div><b>${esc(e.label)}</b><small>${TN[e.type]} · שכבת ${esc(layerOf(e).name)} · ${fmt0(st)}${amb?'–'+fmt0(en):''}</small></div><span class="chip ${has?'ok':'wait'}">${has?'מוכן':'ממתין לקובץ'}</span></header>
-  <div class="pr"><code>${esc(buildPrompt(e))}</code><span class="gs">משך ${g.dur} ש׳ · Prompt influence ${g.infl} · Loop ${g.loop?'כן':'לא'} · שם קובץ: <span dir="ltr" style="white-space:nowrap">${esc(fname(e))}</span></span><div class="row"><button data-a="copy" class="sm">העתקת פרומפט</button></div></div>
-  <div class="row"><label class="btn sm">${has?'החלפת קובץ':'העלאת קובץ'}<input type="file" accept="audio/*" data-a="file" hidden></label>${has?`<span class="fn">${esc(e.file||'')}</span>`:''}</div>
-  <div class="ctl">
-   <label>שכבה<select data-k="layer">${S.layers.map(l=>`<option value="${l.id}"${layerOf(e)===l?' selected':''}>${esc(l.name)}</option>`).join('')}</select></label>
-   <label>עוצמה <input type="range" min="0" max="1.5" step="0.05" value="${e.vol}" data-k="vol"><output>${Math.round(e.vol*100)}%</output></label>
-   <label>כניסה הדרגתית (ש׳)<input type="number" min="0" max="15" step="0.5" value="${e.fi}" data-k="fi"></label>
-   <label>יציאה הדרגתית (ש׳)<input type="number" min="0" max="15" step="0.5" value="${e.fo}" data-k="fo"></label>
-   <label>הזזה בזמן (ש׳)<input type="number" min="-30" max="30" step="0.1" value="${e.off}" data-k="off"></label>
-   ${amb&&e.abs&&!e.full?`<label>אורך (ש׳)<input type="number" min="2" max="900" step="1" value="${e.len}" data-k="len"></label>`:''}
-   ${amb?`<label class="ck"><input type="checkbox" data-k="loop"${e.loop?' checked':''}> לופ</label><label class="ck"><input type="checkbox" data-k="duck"${e.duck?' checked':''}> יורד כשמדברים</label>`:''}
-   <label class="ck"><input type="checkbox" data-k="mute"${e.mute?' checked':''}> השתקה</label>
-  </div>
-  <details><summary>איך לייצר את זה ב-ElevenLabs</summary>${explainHTML(e)}</details>
-  <footer><button data-a="play" class="sm">השמעה מכאן</button><button data-a="edit" class="sm">עריכה</button><button data-a="del" class="sm ghost">מחיקה</button></footer></article>`}
-function renderLayers(){const c=n=>S.effects.filter(e=>layerOf(e).id===n).length;
-  $('#lyl').innerHTML=`<div class="lyh"><b>שכבות</b><button id="lyadd" class="sm">+ שכבה חדשה</button></div>`+S.layers.map(L=>`<div class="ly" data-id="${L.id}">
-   <input type="text" value="${esc(L.name)}" data-lk="name" aria-label="שם השכבה">
-   <label>עוצמה <input type="range" min="0" max="1.5" step="0.05" value="${L.vol}" data-lk="vol"></label>
-   <label class="ck"><input type="checkbox" data-lk="mute"${L.mute?' checked':''}> השתקה</label>
-   <span class="cnt">${c(L.id)} אפקטים</span>
-   <button class="sm ghost" data-la="del"${S.layers.length<2?' disabled':''}>מחיקה</button></div>`).join('')}
-function renderFx(){const L=$('#fxl');const E=[...S.effects].sort((a,b)=>span(a)[0]-span(b)[0]);
-  L.innerHTML=E.length?E.map(cardHTML).join(''):`<p class="empty">עוד אין אפקטים. בוחרים מילה בטקסט ולוחצים "הוספת אפקט כאן". כשהרשימה מוכנה, "מייל אפקטים לייצור" שולח את כל הפרומפטים מסודרים.</p>`}
-const PAD=40;let TW=0;
-const X=t=>TW-PAD-t*S.pps, TX=x=>(TW-PAD-x)/S.pps;
-function layoutTL(reset){const sc=$('#sc'),inner=$('#inner'),pps=S.pps,T=total(true),w=sc.clientWidth;
-  const tc=(!reset&&TW)?TX(sc.scrollLeft+w/2):null;
-  TW=Math.max(Math.ceil(T*pps)+2*PAD,w||0);inner.style.width=TW+'px';
-  const wl=$('#wl');wl.style.top=(RH+WH)+'px';
-  wl.innerHTML=pps>=30?S.words.map((x,i)=>`<span data-i="${i}" class="${sel&&i>=sel.a&&i<=sel.b?'s':''}" style="left:${X(WT[i][1])}px;width:${Math.max(6,(WT[i][1]-WT[i][0])*pps)}px">${esc(x.t)}</span>`).join(''):'';
-  let top=RH+WH+WLH;const fl=$('#fl');fl.style.top=top+'px';let html='',lanes='',y=0;
-  lanes+=`<div class="lane" style="top:0;height:${RH+WH}px"><span>קריינות</span></div><div class="lane" style="top:${RH+WH}px;height:${WLH}px;font-weight:400;color:var(--mut)"><span>מילים</span></div>`;
-  for(const L of S.layers){const items=S.effects.filter(e=>layerOf(e)===L).map(e=>({e,sp:span(e)})).sort((a,b)=>a.sp[0]-b.sp[0]);const rows=[];
-    for(const it of items){let r=rows.findIndex(end=>end<=it.sp[0]-0.05);if(r<0){r=rows.length;rows.push(0)}rows[r]=it.sp[1];it.r=r}
-    const h=Math.max(1,rows.length)*FXR+8;
-    for(const{e,sp,r}of items){const wd=Math.max(22,(sp[1]-sp[0])*pps);html+=`<div class="blk t-${e.type}${effBuf[e.id]?'':' wait'}${(e.mute||L.mute)?' mute':''}" data-id="${e.id}" title="${esc(e.label)}" style="left:${X(sp[0])-wd}px;width:${wd}px;top:${y+4+r*FXR}px"><b>${e.n}</b> ${esc(e.label)}</div>`}
-    html+=`<div class="lsep" style="top:${y+h}px"></div>`;
-    lanes+=`<div class="lane${L.mute?' off':''}" style="top:${top+y}px;height:${h}px"><span title="${esc(L.name)}">${esc(L.name)}</span><button data-lm="${L.id}" class="${L.mute?'on':''}">${L.mute?'מושתק':'השתקה'}</button></div>`;
-    y+=h}
-  fl.innerHTML=html;fl.style.height=y+'px';
-  const H=top+y+2;inner.style.height=H+'px';const ln=$('#lanes');ln.innerHTML=lanes;ln.style.height=H+'px';
-  sc.scrollLeft=tc==null?TW:X(tc)-w/2;drawWave();placePH()}
-function drawWave(){const sc=$('#sc'),cv=$('#cv'),dpr=devicePixelRatio||1,w=sc.clientWidth,h=RH+WH;if(!w)return;
-  cv.width=w*dpr;cv.height=h*dpr;cv.style.width=w+'px';cv.style.height=h+'px';cv.style.left=sc.scrollLeft+'px';
-  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);const pps=S.pps,x0=sc.scrollLeft;
-  const step=pps>=100?1:pps>=40?5:pps>=15?10:30;g.fillStyle=col('--mut');g.font='11px Assistant, sans-serif';g.textAlign='right';
-  const tHi=TX(x0),tLo=TX(x0+w);
-  for(let t=Math.max(0,Math.floor(tLo/step)*step);t<=tHi;t+=step){const x=X(t)-x0;g.fillRect(x,RH-6,1,6);g.fillText(fmt0(t),x-3,12)}
-  g.fillStyle=col('--accSoft');let acc=0;for(const p of pts()){g.fillRect(X(p.at+acc+p.sec)-x0,RH,p.sec*pps,WH);acc+=p.sec}
-  if(!narBuf)return;const d=narBuf.getChannelData(0),sr=narBuf.sampleRate,SG=segs(),mid=RH+WH/2;g.fillStyle=col('--wave');
-  for(let x=0;x<w;x++){const T2=TX(x0+x),T1=TX(x0+x+1);if(T2<0)continue;const sg=SG.find(s=>T1>=s.o&&T1<s.o+(s.e-s.s));if(!sg)continue;
-    const a=Math.floor((sg.s+T1-sg.o)*sr),b=Math.min(d.length,Math.floor((sg.s+T2-sg.o)*sr));let mn=0,mx=0;const stp=Math.max(1,Math.floor((b-a)/300));
-    for(let i=a;i<b;i+=stp){const v=d[i];if(v<mn)mn=v;if(v>mx)mx=v}const y1=mid-mx*WH*0.48,y2=mid-mn*WH*0.48;g.fillRect(x,y1,1,Math.max(1,y2-y1))}}
-function placePH(p){$('#ph').style.left=X(p??cur)+'px';updTime(p)}
-function updTime(p){$('#time').textContent=fmt(p??pos())+' / '+fmt0(total(true))}
+/* ================= ציר הזמן: ציור ================= */
+const RUL=26,TXH=44,PAD=30;let TW=0,ROWS=[];
+const X=t=>TW-PAD-t*S.pps,TX=x=>(TW-PAD-x)/S.pps;
+const sc=$('#sc'),inner=$('#inner');
+function laneH(t){return t.kind==='voice'?118:78}
+function buildRows(){ROWS=[];let y=RUL;for(const t of S.tracks){ROWS.push({t,y,h:laneH(t)});y+=laneH(t);if(t.kind==='voice'&&t===S.tracks.find(x=>x.kind==='voice')&&S.words.length){ROWS.push({txt:true,y,h:TXH});y+=TXH}}return y}
+const rowOf=id=>ROWS.find(r=>r.t&&r.t.id===id);
+function rowAtY(y){for(const r of ROWS)if(y>=r.y&&y<r.y+r.h)return r.txt?ROWS[ROWS.indexOf(r)-1]:r;return y<RUL?null:ROWS.filter(r=>r.t).slice(-1)[0]}
+function layoutTL(keep){recalc();const w=sc.clientWidth||800,T=total();const tc=keep&&TW?TX(sc.scrollLeft+w/2):null;
+  TW=Math.max(Math.ceil(T*S.pps)+2*PAD+200,w);inner.style.width=TW+'px';const H=buildRows();inner.style.height=H+'px';$('#heads').style.height=H+'px';
+  $('#lbg').innerHTML=`<div class="rul" style="height:${RUL}px"></div>`+ROWS.map((r,i)=>`<div class="lb${r.t&&r.t.id===S.selTrack?' on':i%2?' alt':''}" style="top:${r.y}px;height:${r.h}px"></div>`).join('');
+  renderHeads();renderOverlay();
+  if(tc!=null)sc.scrollLeft=X(tc)-w/2;else sc.scrollLeft=TW;
+  $('#empty').hidden=S.clips.some(c=>SRC[c.src])||!!rec;drawWave();placePH()}
+function renderHeads(){$('#heads').innerHTML=`<div class="hd rul" style="top:0;height:${RUL}px"><button id="addTrack" class="sm ghost" style="min-height:20px;font-size:12px">+ שכבה חדשה</button></div>`+ROWS.map(r=>{
+  if(r.txt)return`<div class="hd txt" style="top:${r.y}px;height:${r.h}px">טקסט · אפשר לגרור משפט לתיקון זמן</div>`;const t=r.t;
+  return`<div class="hd${t.id===S.selTrack?' on':''}" data-t="${t.id}" style="top:${r.y}px;height:${r.h}px;--c:${KIND_C[t.kind]}">
+   <div class="r1"><input type="text" value="${esc(t.name)}" data-k="name" aria-label="שם השכבה"><button class="ms m${t.mute?' on':''}" data-a="mute" title="השתקה">M</button><button class="ms s${t.solo?' on':''}" data-a="solo" title="סולו">S</button><button class="x" data-a="del" title="מחיקת השכבה">✕</button></div>
+   <div class="r2">עוצמה<input type="range" min="0" max="1.5" step="0.05" value="${t.vol}" data-k="vol"></div>
+   ${t.kind!=='voice'?`<label class="ck r2"><input type="checkbox" data-k="duck"${t.duck?' checked':''}> יורד כשמדברים</label>`:''}</div>`}).join('')}
+function renderOverlay(){const pps=S.pps;let h='';
+  for(const r of ROWS){if(r.txt){
+      S.sentences.forEach((s,i)=>{const a=WT[s.a],b=WT[s.b];if(!a||!b)return;h+=`<div class="sen" data-s="${i}" style="left:${X(b[1])}px;width:${Math.max(10,(b[1]-a[0])*pps)}px;top:${r.y+3}px" title="${esc(sText(s))}">${esc(sText(s))}</div>`});
+      if(pps>=45)S.words.forEach((w,i)=>{const p=WT[i];if(!p)return;h+=`<div class="wd${wsel&&i>=wsel.a&&i<=wsel.b?' s':''}" data-w="${i}" style="left:${X(p[1])}px;width:${Math.max(4,(p[1]-p[0])*pps)}px;top:${r.y+25}px">${esc(w.t)}</div>`});continue}
+    const t=r.t,items=[...S.clips.filter(c=>c.track===t.id).map(c=>({c,a:c.start,b:ce(c)})),...S.orders.filter(o=>!o.clip&&o.track===t.id).map(o=>{const[a,b]=orderSpan(o);return{o,a,b}})].sort((x,y)=>x.a-y.a);
+    const rowsEnd=[];for(const it of items){let k=rowsEnd.findIndex(e=>e<=it.a+0.01);if(k<0){k=rowsEnd.length;rowsEnd.push(0)}rowsEnd[k]=it.b;it.k=k}
+    const n=Math.max(1,rowsEnd.length),ih=(r.h-4)/n;
+    for(const it of items){const top=r.y+2+it.k*ih,wd=Math.max(6,(it.b-it.a)*pps),left=X(it.b);
+      if(it.c){const c=it.c;c._y=top;c._h=ih-1;h+=`<div class="clip${selClip===c.id?' sel':''}${!audible(t)?' mute':''}" data-c="${c.id}" style="left:${left}px;width:${wd}px;top:${top}px;height:${ih-1}px;--c:${KIND_C[t.kind]}"><div class="chd">${esc(c.label||S.srcs[c.src]?.name||'')}${c.loop?' · לופ':''}</div>${wd>30?'<div class="fh i" data-f="i" title="Fade in"></div><div class="fh o" data-f="o" title="Fade out"></div>':''}<div class="edge s" data-e="s"></div><div class="edge e" data-e="e"></div></div>`}
+      else{const o=it.o;h+=`<div class="gst" data-o="${o.id}" style="left:${left}px;width:${wd}px;top:${top}px;height:${ih-1}px;--c:${KIND_C[t.kind]}" title="ממתין לקובץ">${o.n} · ${esc(o.label)} · ממתין לקובץ</div>`}}}
+  if(sel)for(const tid of sel.tracks){const r=rowOf(tid);if(r)h+=`<div class="selr" style="left:${X(sel.b)}px;width:${Math.max(1,(sel.b-sel.a)*pps)}px;top:${r.y}px;height:${r.h}px"></div>`}
+  $('#ov').innerHTML=h}
+function drawWave(){const cv=$('#cv'),dpr=devicePixelRatio||1,w=sc.clientWidth,H=inner.clientHeight;if(!w||!H)return;
+  cv.width=w*dpr;cv.height=H*dpr;cv.style.width=w+'px';cv.style.height=H+'px';cv.style.left=sc.scrollLeft+'px';
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,H);const pps=S.pps,x0=sc.scrollLeft;
+  const step=pps>=100?1:pps>=40?5:pps>=15?10:pps>=6?30:60;g.fillStyle='#9b95b2';g.font='11px Assistant, sans-serif';g.textAlign='right';
+  const tHi=TX(x0),tLo=TX(x0+w);for(let t=Math.max(0,Math.floor(tLo/step)*step);t<=tHi;t+=step){const x=X(t)-x0;g.fillRect(x,RUL-7,1,7);g.fillText(fmt0(t),x-3,13)}
+  g.fillStyle='#2d2939';g.fillRect(0,RUL-1,w,1);
+  const colors={voice:'#9c8cf0',bg:'#4cc3b7',amb:'#6fa8f0',fx:'#f0965f',other:'#e07aa8'};
+  for(const c of S.clips){const s=SRC[c.src];if(!s||c._y==null)continue;const xr=X(c.start),xl=X(ce(c));
+    const a=Math.max(xl,x0),b=Math.min(xr,x0+w);if(b<=a)continue;const T=trk(c.track),sp=T?.duck?speech():null;
+    const top=c._y+17,hh=c._h-17,mid=top+hh/2,{mn,mx,PR}=s.peaks,dur=s.buf.duration,raw=pps>PR,d=raw?s.buf.getChannelData(0):null,sr=s.buf.sampleRate;
+    g.fillStyle=colors[T?.kind]||'#aaa';g.globalAlpha=audible(T)?.9:.35;
+    for(let px=Math.floor(a);px<b;px++){const tB=TX(px)-c.start,tA=TX(px+1)-c.start;if(tB<0||tA>c.len)continue;let sA=c.in+Math.max(0,tA),sB=c.in+Math.min(c.len,tB);
+      if(c.loop){sA%=dur;sB=sA+(tB-tA)}if(sA>=dur)continue;let lo=0,hi=0;
+      if(raw){const i0=Math.floor(sA*sr),i1=Math.min(d.length,Math.ceil(sB*sr));for(let i=i0;i<i1;i++){const v=d[i];if(v<lo)lo=v;if(v>hi)hi=v}}
+      else{const i0=Math.floor(sA*PR),i1=Math.min(mn.length,Math.max(i0+1,Math.ceil(sB*PR)));for(let i=i0;i<i1;i++){if(mn[i]<lo)lo=mn[i];if(mx[i]>hi)hi=mx[i]}}
+      const e=envAt(c,clamp((tA+tB)/2,0,c.len),null);const y1=mid-hi*e*hh*0.5,y2=mid-lo*e*hh*0.5;g.fillRect(px-x0,y1,1,Math.max(1,y2-y1))}
+    g.globalAlpha=1;
+    if(c.fi||c.fo||c.ops.length||c.gain!==1){g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=1.2;g.beginPath();const keys=envKeys(c,null);let first=true;
+      for(const u of keys){const x=X(c.start+u)-x0,y=top+hh-hh*clamp(envAt(c,u,null)/1.5,0,1)*1;if(first){g.moveTo(x,y);first=false}else g.lineTo(x,y)}g.stroke()}}}
+function placePH(p){$('#ph').style.left=X(p??cur)+'px';$('#time').textContent=fmt(p??pos())}
+
+/* ================= ציר הזמן: עכבר ================= */
+inner.addEventListener('pointerdown',ev=>{if(ev.button!==0)return;const r0=inner.getBoundingClientRect(),xOf=e=>e.clientX-r0.left,yOf=e=>e.clientY-r0.top,x=xOf(ev),y=yOf(ev),t0=TX(x);
+  const cl=ev.target.closest('.clip'),c=cl&&S.clips.find(z=>z.id===cl.dataset.c);
+  const drag=(mv,up)=>{inner.setPointerCapture(ev.pointerId);const M=e=>mv(e),Up=e=>{inner.removeEventListener('pointermove',M);inner.removeEventListener('pointerup',Up);up&&up(e)};inner.addEventListener('pointermove',M);inner.addEventListener('pointerup',Up)};
+  if(y<RUL){seekTo(Math.max(0,t0));drag(e=>seekTo(Math.max(0,TX(xOf(e)))));return}
+  const gh=ev.target.closest('.gst');if(gh){focusOrder(gh.dataset.o);return}
+  if(c&&ev.target.dataset.f){let moved=false;const f=ev.target.dataset.f;drag(e=>{if(!moved){pushUndo();moved=true}const t=TX(xOf(e));if(f==='i')c.fi=clamp(t-c.start,0,c.len);else c.fo=clamp(ce(c)-t,0,c.len);renderOverlay();drawWave()},()=>{if(moved)afterEdit()});return}
+  if(c&&ev.target.dataset.e){let moved=false;const e0=ev.target.dataset.e,st0=c.start,in0=c.in,len0=c.len,ops0=JSON.stringify(c.ops),dur=SRC[c.src]?.buf.duration||1e9;
+    drag(e=>{if(!moved){pushUndo();moved=true}const t=TX(xOf(e));
+      if(e0==='s'){let dd=t-st0;dd=clamp(dd,c.loop?-1e9:-in0,len0-0.05);c.in=c.loop?((in0+dd)%dur+dur)%dur:in0+dd;c.len=len0-dd;setStart(c,st0+dd);c.ops=JSON.parse(ops0).map(o=>({...o,a:o.a-dd,b:o.b-dd}))}
+      else{c.len=clamp(t-st0,0.05,c.loop?3600:dur-in0)}c.full=false;renderOverlay();drawWave()},()=>{if(moved)afterEdit()});return}
+  if(c&&ev.target.closest('.chd')){let moved=false;const st0=c.start;selClip=c.id;S.selTrack=c.track;
+    drag(e=>{const dx=xOf(e)-x;if(!moved&&Math.abs(dx)<3&&Math.abs(yOf(e)-y)<3)return;if(!moved){pushUndo();moved=true}
+      setStart(c,Math.max(0,st0-dx/S.pps));c.full=false;const r=rowAtY(yOf(e));if(r&&r.t&&r.t.id!==c.track)c.track=r.t.id;renderOverlay();drawWave()},
+      ()=>{if(moved)afterEdit();else{seekTo(Math.max(0,t0));layoutTL(true)}});return}
+  const sen=ev.target.closest('.sen');if(sen){const si=+sen.dataset.s,s=S.sentences[si];let moved=false;const orig=S.words.slice(s.a,s.b+1).map(w=>[w.s,w.e]);
+    const lo=si>0?S.words[S.sentences[si-1].b].e:0,hi=si<S.sentences.length-1?S.words[S.sentences[si+1].a].s:1e9;
+    drag(e=>{const dx=xOf(e)-x;if(!moved&&Math.abs(dx)<3)return;if(!moved){pushUndo();moved=true}let dt=-dx/S.pps;dt=clamp(dt,lo-orig[0][0],hi-orig[orig.length-1][1]);
+      for(let k=0;k<orig.length;k++){S.words[s.a+k].s=orig[k][0]+dt;S.words[s.a+k].e=orig[k][1]+dt}recalc();renderOverlay()},
+      ()=>{if(moved)afterEdit();else{wsel={a:s.a,b:s.b,a0:s.a};seekTo(WT[s.a]?.[0]??0);renderTx();renderSel();renderOverlay()}});return}
+  const wd=ev.target.closest('.wd');if(wd){const i=+wd.dataset.w;wsel={a:i,b:i,a0:i};seekTo(WT[i][0]);renderTx();renderSel();renderOverlay();return}
+  const r=rowAtY(y);if(!r)return;const startRow=ROWS.indexOf(r);let moved=false;
+  drag(e=>{const xx=xOf(e),yy=yOf(e);if(!moved&&Math.abs(xx-x)<4)return;moved=true;const r2=rowAtY(yy)||r;const i1=Math.min(startRow,ROWS.indexOf(r2)),i2=Math.max(startRow,ROWS.indexOf(r2));
+      const t1=Math.max(0,TX(xx));sel={a:Math.min(t0,t1),b:Math.max(t0,t1),tracks:ROWS.slice(i1,i2+1).filter(q=>q.t).map(q=>q.t.id)};selClip=null;renderOverlay()},
+    ()=>{if(!moved){sel=null;selClip=c?c.id:null;S.selTrack=r.t.id;seekTo(Math.max(0,t0));layoutTL(true)}else{cur=sel.a;placePH();renderSelInfo()}})});
+function renderSelInfo(){if(sel)setStat(`נבחר ${fmt(sel.b-sel.a)} ש׳`)}
+$('#heads').addEventListener('input',ev=>{const hd=ev.target.closest('.hd');if(!hd||!hd.dataset.t)return;const t=trk(hd.dataset.t),k=ev.target.dataset.k;
+  if(k==='name')t.name=ev.target.value;else if(k==='vol')t.vol=+ev.target.value;else if(k==='duck')t.duck=ev.target.checked;save();live();if(k==='duck'||k==='vol')drawWave()});
+$('#heads').addEventListener('change',ev=>{if(ev.target.dataset.k==='name'){renderOrders();renderFxTrackSel()}});
+$('#heads').addEventListener('click',async ev=>{if(ev.target.id==='addTrack'){pushUndo();const id=uid();S.tracks.push({id,name:'שכבה '+(S.tracks.length+1),kind:'other',vol:1,mute:false,solo:false,duck:false});S.selTrack=id;afterEdit();return}
+  const hd=ev.target.closest('.hd');if(!hd||!hd.dataset.t)return;const t=trk(hd.dataset.t),a=ev.target.dataset.a;
+  if(a==='mute'){t.mute=!t.mute;save();layoutTL(true);live();return}
+  if(a==='solo'){t.solo=!t.solo;save();layoutTL(true);live();return}
+  if(a==='del'){if(S.tracks.length<2)return;const n=S.clips.filter(c=>c.track===t.id).length;if(!await confirmBox(`למחוק את השכבה "${t.name}"?`,n?`${n} קליפים בשכבה יימחקו.`:'השכבה ריקה.','מחיקה'))return;
+    pushUndo();S.clips=S.clips.filter(c=>c.track!==t.id);S.tracks=S.tracks.filter(x=>x!==t);S.orders.forEach(o=>{if(o.track===t.id)o.track=S.tracks[0].id});if(S.selTrack===t.id)S.selTrack=S.tracks[0].id;afterEdit();return}
+  if(ev.target.tagName!=='INPUT'){S.selTrack=t.id;layoutTL(true)}});
+let raf=0;sc.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(drawWave)});
+let lastW=0;new ResizeObserver(()=>{const w=sc.clientWidth;if(w&&Math.abs(w-lastW)>2){lastW=w;layoutTL(true)}}).observe(sc);
+function zoom(f){S.pps=clamp(S.pps*f,2,400);layoutTL(true);sc.scrollLeft=X(pos())-sc.clientWidth/2;drawWave();save()}
+function fitZoom(){S.pps=clamp((sc.clientWidth-2*PAD-40)/Math.max(10,total()),2,400);layoutTL();save()}
+sc.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();zoom(e.deltaY<0?1.15:1/1.15)}},{passive:false});
+$('#tl').addEventListener('dragover',e=>e.preventDefault());
+
+/* ================= תמלול ================= */
+const sText=s=>S.words.slice(s.a,s.b+1).map(w=>w.t).join(' ');
+function trStat(m,err){const e=$('#trst');e.textContent=m||'';e.className=err?'err':''}
+function gkey(){return LS.get('medi.gkey','')}
+const GM='https://generativelanguage.googleapis.com/v1beta/models/';
+async function gemini(model,body){const r=await fetch(GM+encodeURIComponent(model)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':gkey()},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));if(!r.ok){const m=j?.error?.message||r.statusText;const e=new Error(r.status===400&&/API key/i.test(m)?'מפתח ה-API של Gemini לא תקין':m);e.status=r.status;throw e}return j}
+async function encodeForGemini(buf){const sr=16000,n=Math.ceil(buf.duration*sr),c=new OfflineAudioContext(1,n,sr),s=c.createBufferSource();s.buffer=buf;s.connect(c.destination);s.start();const b=await c.startRendering();
+  let blob,mime;try{blob=await toMp3(b,1,32);mime='audio/mp3'}catch(e){blob=toWav(b,1);mime='audio/wav'}
+  if(blob.size>14e6)throw new Error('ההקלטה ארוכה מדי לשליחה אחת (מעל כשעה)');const d=await b64(blob);return{mime,data:d.slice(d.indexOf(',')+1)}}
+function buildSentences(words){const out=[];let a=0;for(let i=0;i<words.length;i++){const w=words[i],nx=words[i+1],n=i-a+1;
+    const end=!nx||/[.?!…:]$/.test(w.t)||nx.s-w.e>0.85||(n>=8&&nx.s-w.e>0.4)||n>=16;if(end){out.push({a,b:i});a=i+1}}return out}
+function energy(buf){const d=buf.getChannelData(0),sr=buf.sampleRate,F=Math.floor(sr*0.02),n=Math.floor(d.length/F),E=new Float32Array(n);
+  for(let i=0;i<n;i++){let s=0;for(let j=i*F;j<(i+1)*F;j+=2)s+=d[j]*d[j];E[i]=Math.sqrt(s/(F/2))}
+  const so=[...E].sort((x,y)=>x-y),floor=so[Math.floor(n*0.1)]||0,pk=so[Math.floor(n*0.99)]||1;return{E,thr:Math.max(floor*3.5,pk*0.06),fr:0.02}}
+function refineSegments(segs,buf){const{E,thr,fr}=energy(buf),n=E.length,V=i=>i>=0&&i<n&&E[i]>thr;const words=[],sentences=[];
+  segs.sort((x,y)=>x.s-y.s);
+  segs.forEach((g,k)=>{let s=g.s,e=g.e;const nxt=segs[k+1]?.s??buf.duration,prv=k?segs[k-1].e:0;
+    let best=null;for(let i=Math.max(0,Math.floor((s-1.2)/fr));i<=Math.min(n-1,Math.floor((s+1.2)/fr));i++){if(V(i)&&!V(i-1)&&!V(i-2)&&!V(i-3)){const t=i*fr;if(t<prv-0.05)continue;if(best==null||Math.abs(t-s)<Math.abs(best-s))best=t}}
+    if(best!=null)s=best;let bestE=null;for(let i=Math.floor(Math.max(s,e-1.2)/fr);i<=Math.min(n-1,Math.floor(Math.min(nxt,e+1.2)/fr));i++){if(V(i)&&!V(i+1)&&!V(i+2)){const t=(i+1)*fr;if(bestE==null||Math.abs(t-e)<Math.abs(bestE-e))bestE=t}}
+    if(bestE!=null&&bestE>s+0.2)e=bestE;if(e<=s)e=s+Math.max(0.5,g.e-g.s);
+    const toks=g.text.trim().split(/\s+/).filter(Boolean);if(!toks.length)return;const vf=[];for(let i=Math.floor(s/fr);i<Math.ceil(e/fr);i++)if(V(i))vf.push(i*fr);
+    const wts=toks.map(t=>t.replace(/[^א-תa-z0-9]/gi,'').length+1),tot=wts.reduce((x,y)=>x+y,0);let acc=0;const a0=words.length;
+    const tAt=q=>{if(vf.length<4)return s+(e-s)*q;const i=Math.min(vf.length-1,Math.floor(q*vf.length));return vf[i]};
+    toks.forEach((t,j)=>{const qa=acc/tot;acc+=wts[j];const qb=acc/tot;const ws=tAt(qa),we=Math.max(ws+0.08,j===toks.length-1?e:tAt(qb)-0.02);words.push({t,s:ws,e:we})});
+    sentences.push({a:a0,b:words.length-1})});
+  return{words,sentences}}
+function parseTime(v){if(typeof v==='number')return v;v=String(v).trim().replace(',','.');const m=v.match(/^(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)$/);if(m)return(+(m[1]||0))*3600+(+m[2])*60+(+m[3]);const m2=v.match(/^(\d+(?:\.\d+)?)s?$/);return m2?+m2[1]:NaN}
+async function narrationSource(){const vt=S.tracks.filter(t=>t.kind==='voice').map(t=>t.id);const vc=S.clips.filter(c=>vt.includes(c.track)&&SRC[c.src]);if(!vc.length)return null;
+  const ids=[...new Set(vc.map(c=>c.src))];if(ids.length===1&&!vc.some(c=>c.ops.length||c.fi||c.fo)){S.narSrc=ids[0];return ids[0]}
+  trStat('מאחד את שכבת הקריינות לקובץ אחד…');const b=await renderMix(vt);const blob=toWav(b,1);pushUndo();const id=await addSource(blob,'קריינות מאוחדת');
+  S.clips=S.clips.filter(c=>!vt.includes(c.track));S.clips.push(newClip({track:vt[0],src:id,start:0,len:b.duration,label:'קריינות'}));S.narSrc=id;return id}
+function detachFromWords(){recalc();for(const c of S.clips)if(c.aw!=null){c.aw=null;c.ao=0}S.orders=S.orders.filter(o=>o.clip||o.type==='background');S.orders.forEach(o=>{if(o.w0!=null){o.at=WT[o.w0]?.[0]??o.at??0;o.w0=o.w1=null}})}
+async function transcribe(){if(!gkey()){toast('צריך מפתח API של Gemini');openSettings();return}
+  const id0=S.narSrc&&SRC[S.narSrc]?S.narSrc:null;if(!S.clips.some(c=>SRC[c.src])){toast('אין עדיין הקלטה');return}
+  if(S.words.length&&!await confirmBox('לתמלל מחדש?','התמלול הנוכחי יוחלף. הזמנות שמחכות לקובץ יימחקו, וקליפים שכבר בציר יישארו במקום.','תמלול מחדש'))return;
+  const bt=$('#trgo');bt.disabled=true;
+  try{const id=await narrationSource()||id0;const buf=SRC[id].buf;trStat('מכין את הקובץ לשליחה…');const aud=await encodeForGemini(buf);
+    trStat('Gemini מתמלל… (בדרך כלל פחות מדקה)');let res=null;
+    try{const j=await gemini(LS.get('medi.tmodel','gemini-3.5-transcribe'),{contents:[{role:'user',parts:[{inlineData:{mimeType:aud.mime,data:aud.data}}]}],generationConfig:{audioTranscriptionConfig:{languageCodes:[LS.get('medi.lang','he-IL')],wordTimestamp:true}}});
+      const ws=(j.candidates?.[0]?.content?.parts||[]).flatMap(p=>p.audioTranscription?.words||[]).map(w=>({t:String(w.word||'').trim(),s:parseTime(w.startOffset),e:parseTime(w.endOffset)})).filter(w=>w.t&&isFinite(w.s));
+      ws.forEach(w=>{if(!isFinite(w.e)||w.e<w.s)w.e=w.s+0.3});ws.sort((a,b)=>a.s-b.s);if(ws.length)res={words:ws,sentences:buildSentences(ws)}}
+    catch(e){if(e.status===400&&/API key/i.test(e.message))throw e;console.warn(e)}
+    if(!res){trStat('מנסה דרך חלופית…');const j=await gemini(LS.get('medi.xmodel','gemini-3.8-flash'),{contents:[{role:'user',parts:[{inlineData:{mimeType:aud.mime,data:aud.data}},{text:SEG_PROMPT}]}],
+        generationConfig:{temperature:0,responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{segments:{type:'ARRAY',items:{type:'OBJECT',properties:{start:{type:'STRING'},end:{type:'STRING'},text:{type:'STRING'}},required:['start','end','text']}}},required:['segments']}}});
+      const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');const segs=(JSON.parse(txt).segments||[]).map(g=>({s:parseTime(g.start),e:parseTime(g.end),text:g.text})).filter(g=>isFinite(g.s)&&g.text);
+      if(!segs.length)throw new Error('Gemini לא החזיר תמלול');res=refineSegments(segs,buf)}
+    pushUndo();detachFromWords();S.narSrc=id;S.words=res.words;S.sentences=res.sentences;wsel=null;afterEdit();trStat(`תומללו ${S.words.length} מילים ב-${S.sentences.length} משפטים`);
+    suggest(true)}
+  catch(e){trStat('התמלול נכשל: '+(e.message==='Failed to fetch'?'אין חיבור ל-Gemini (אינטרנט או חוסם פרסומות)':e.message),true)}
+  finally{bt.disabled=false}}
+const SEG_PROMPT='Transcribe this Hebrew guided-meditation recording verbatim, in Hebrew. Split it into short segments of one phrase or sentence each (at most about 12 words). For each segment give the start and end time measured from the beginning of the audio, formatted MM:SS.s with tenths of a second, and the exact spoken text. Do not skip, translate, summarize or add words.';
+const PASTE_PROMPT='תמלל את ההקלטה המצורפת מילה במילה, בעברית, בלי לדלג, לסכם או לתקן ניסוח. חלק לשורות קצרות של משפט או חצי משפט (עד כ-12 מילים בשורה). בתחילת כל שורה כתוב את זמן ההתחלה המדויק בסוגריים מרובעים בפורמט [MM:SS.s] עם עשיריות שנייה, ואחריו את הטקסט. אל תוסיף שום דבר מלבד השורות.';
+$('#pprompt').textContent=PASTE_PROMPT;$('#pcopy').onclick=async()=>toast(await copyText(PASTE_PROMPT)?'ההנחיה הועתקה':'ההעתקה נכשלה');
+$('#trpaste').onclick=()=>{if(!S.clips.some(c=>SRC[c.src])){toast('קודם מעלים הקלטה');return}const d=$('#pasted');d.returnValue='';d.showModal()};
+$('#pasted').addEventListener('close',async()=>{if($('#pasted').returnValue!=='ok')return;const txt=$('#pastef').elements.txt.value;const segs=[];
+  for(const line of txt.split(/\n+/)){const m=line.match(/^\s*\[?\s*((?:\d+:)?\d{1,2}:\d{2}(?:[.,]\d+)?)\s*(?:[-–—]\s*((?:\d+:)?\d{1,2}:\d{2}(?:[.,]\d+)?))?\s*\]?\s*[-–—:]?\s*(.+)$/);if(m)segs.push({s:parseTime(m[1]),e:m[2]?parseTime(m[2]):NaN,text:m[3].trim()})}
+  if(!segs.length){toast('לא מצאתי שורות עם זמנים, למשל [00:12.5] טקסט');return}
+  try{const id=await narrationSource();const buf=SRC[id].buf;segs.forEach((g,i)=>{if(!isFinite(g.e))g.e=segs[i+1]?.s??Math.min(buf.duration,g.s+4)});
+    const res=refineSegments(segs,buf);pushUndo();detachFromWords();S.narSrc=id;S.words=res.words;S.sentences=res.sentences;afterEdit();trStat(`נטענו ${S.words.length} מילים`);suggest(true)}catch(e){toast('הטעינה נכשלה: '+e.message)}});
+$('#trgo').onclick=transcribe;
+
+/* ================= טקסט ================= */
+function renderTx(){const tx=$('#tx');recalc();
+  if(!S.words.length){tx.innerHTML=`<div class="trbox"><b>כאן יופיע כל מה שנאמר בהקלטה, משפט אחרי משפט.</b><span>לוחצים "תמלול עם Gemini" (צריך מפתח API חינמי, פעם אחת), או "הדבקת תמלול" אם תמללתם באפליקציית Gemini.</span>
+    <span class="mut">אחרי התמלול: לחיצה על מילה מזיזה את הסמן אליה, ובחירת מילים מאפשרת להזמין עליהן אפקט או להוסיף שקט אחריהן.</span></div>`;return}
+  const mk={};for(const o of S.orders){if(o.w0==null)continue;(mk[o.w0]=mk[o.w0]||[]).push(o)}
+  tx.innerHTML=S.sentences.map(s=>`<p><span class="st">${fmt0(WT[s.a]?.[0])}</span>`+S.words.slice(s.a,s.b+1).map((w,k)=>{const i=s.a+k;
+    return`<span class="w${!WT[i]?' gone':''}${wsel&&i>=wsel.a&&i<=wsel.b?' s':''}" data-i="${i}">${(mk[i]||[]).map(o=>`<sup style="--c:${KIND_C[trk(o.track)?.kind||'fx']}">${o.n}</sup>`).join('')}${esc(w.t)}</span>`}).join(' ')+'</p>').join('')}
+function renderSel(){const b=$('#selbar');if(!wsel||!S.words.length){b.hidden=true;return}b.hidden=false;const t=S.words.slice(wsel.a,wsel.b+1).map(w=>w.t).join(' ');
+  b.innerHTML=`<span class="q">«${esc(t.length>50?t.slice(0,50)+'…':t)}»</span><span class="mut">${fmt0(WT[wsel.a]?.[0])}</span><button data-a="fx" class="pri sm">הזמנת אפקט כאן</button><span class="mut">שקט אחרי:</span>${[2,3,5,8].map(s=>`<button data-a="pz" data-s="${s}" class="sm">${s} ש׳</button>`).join('')}<button data-a="x" class="ghost sm">ביטול בחירה</button>`}
 let nowEl=null;
-function hiNow(p){if(!WT.length)return;let lo=0,hi=WT.length-1,k=-1;while(lo<=hi){const m=(lo+hi)>>1;if(WT[m][0]<=p){k=m;lo=m+1}else hi=m-1}
-  const el=k>=0&&p<=WT[k][1]+0.15?$(`#tx .w[data-i="${k}"]`):null;if(el===nowEl)return;nowEl&&nowEl.classList.remove('now');nowEl=el;
-  if(el){el.classList.add('now');if(playing){const tx=$('#tx');const y=el.offsetTop;if(y<tx.scrollTop||y>tx.scrollTop+tx.clientHeight-40)tx.scrollTop=y-tx.clientHeight/3}}}
+function hiNow(p){if(!WT.length)return;let k=-1;for(let i=0;i<WT.length;i++){const q=WT[i];if(q&&q[0]<=p+0.02&&p<=q[1]+0.15){k=i;break}}
+  const el=k>=0?$(`#tx .w[data-i="${k}"]`):null;if(el===nowEl)return;nowEl&&nowEl.classList.remove('now');nowEl=el;
+  if(el){el.classList.add('now');if(playing){const tx=$('#tx'),y=el.offsetTop;if(y<tx.scrollTop||y>tx.scrollTop+tx.clientHeight-40)tx.scrollTop=y-tx.clientHeight/3}}}
+$('#tx').addEventListener('click',ev=>{const w=ev.target.closest('.w');if(!w||w.isContentEditable)return;const i=+w.dataset.i;
+  if(ev.shiftKey&&wsel)wsel={a:Math.min(wsel.a0,i),b:Math.max(wsel.a0,i),a0:wsel.a0};else wsel={a:i,b:i,a0:i};if(WT[wsel.a])seekTo(WT[wsel.a][0]);renderTx();renderSel();renderOverlay()});
+$('#tx').addEventListener('dblclick',ev=>{const w=ev.target.closest('.w');if(!w)return;const i=+w.dataset.i;w.textContent=S.words[i].t;w.contentEditable='true';w.focus();
+  const done=()=>{w.removeEventListener('blur',done);const t=w.textContent.trim();if(t&&t!==S.words[i].t){pushUndo();S.words[i].t=t}w.contentEditable='false';save();renderTx();renderOverlay()};
+  w.addEventListener('blur',done);w.addEventListener('keydown',k=>{if(k.key==='Enter'){k.preventDefault();w.blur()}})});
+$('#selbar').addEventListener('click',ev=>{const b=ev.target.closest('[data-a]');if(!b||!wsel)return;const a=b.dataset.a;
+  if(a==='fx')openFx(null,{w0:wsel.a,w1:wsel.b});
+  if(a==='x'){wsel=null;renderTx();renderSel();renderOverlay()}
+  if(a==='pz'){const p=WT[wsel.b];if(!p)return;insertSilence(p[1]+0.05,+b.dataset.s);toast(`נוסף שקט של ${b.dataset.s} ש׳`)}});
 
-/* ============ דיאלוג אפקט ============ */
+/* ================= הזמנות אפקטים ================= */
+const DICT=[
+ {k:['ים','הים','גלים','גלי','חוף','אוקיינוס'],he:'גלי ים',type:'ambience',dur:3,en:'Gentle ocean waves slowly washing onto a sandy shore and drawing back, calm sea heard from a short distance',tip:'קצב איטי של גלים מתלבש על קצב נשימה של ילד. "sandy shore" נותן גל רך; גלים על סלעים נשמעים חזקים.'},
+ {k:['גשם','טיפות','טפטוף'],he:'גשם עדין',type:'ambience',dur:3,en:'Light gentle rain falling softly on leaves and grass, steady soothing patter',tip:'"light" ו-"on leaves" חשובים; בלי זה עלול להגיע גשם כבד עם רעם.'},
+ {k:['רוח','בריזה','משב'],he:'רוח קלה',type:'ambience',dur:3,en:'Soft warm breeze moving through tall grass, gentle airy rustle',tip:'רוח לבד נשמעת כמו רעש לבן; העשב נותן לה צורה.'},
+ {k:['יער','עצים','עלים'],he:'יער שקט',type:'ambience',dur:3,en:'Peaceful forest in the early morning, leaves rustling softly, a few faint birds far away',tip:'"faint birds far away" שומר שהציפורים לא ישתלטו.'},
+ {k:['ציפור','ציפורים','ציוץ'],he:'ציוץ ציפור',type:'oneshot',dur:3,en:'A single small songbird singing one short sweet chirping phrase, close and clear',tip:'ציפור אחת וביטוי קצר, אחרת מתקבלת מקהלה.'},
+ {k:['נחל','מעיין','פלג','זרם','מפל'],he:'מים זורמים',type:'ambience',dur:3,en:'A small babbling brook, clear water trickling gently over smooth stones',tip:'"small" ו-"gently" חשובים; "river" לבד נותן שאון.'},
+ {k:['פעמון','גונג','קערה','צלצול'],he:'קערה טיבטית',type:'oneshot',dur:7,music:true,en:'One soft strike on a Tibetan singing bowl, warm round resonant tone with a long slowly fading ring',tip:'מצוין לפתיחה ולסיום. משך ארוך כדי לשמוע את כל הדעיכה.'},
+ {k:['נשימה','נושמים','נשמו','שאיפה','נשיפה','לנשום','שואפים','נושפים'],he:'גל נשימה',type:'transition',dur:6,en:'A very soft airy swell that slowly rises and then falls, like one calm deep breath of wind',tip:'לא כותבים "breathing", אחרת מתקבלת נשימה של אדם.'},
+ {k:['כוכב','כוכבים','קסם','קסום','נצנוץ','פיה','פיות','זוהר','נוצץ'],he:'נצנוץ קסום',type:'oneshot',dur:3,music:true,en:'A delicate magical sparkle of tiny soft twinkling chimes, light and dreamy',tip:'"tiny" ו-"soft" מונעים צלצול חודר.'},
+ {k:['לילה','ירח','לישון','שינה'],he:'לילה שקט',type:'ambience',dur:3,en:'Calm warm summer night outdoors, soft crickets chirping far away, very peaceful and still',tip:'צרצרים רחוקים; קרובים נשמעים צורמים.'},
+ {k:['מדורה','להבה'],he:'מדורה',type:'ambience',dur:3,en:'A small cozy campfire crackling softly with occasional gentle pops',tip:'בלי "gentle pops" יהיו פיצוצים שמקפיצים.'},
+ {k:['לב','פעימות','פעימה','דופק','הלב'],he:'פעימות לב',type:'ambience',dur:3,en:'A slow calm heartbeat, soft and muffled, deep and gentle, about sixty beats per minute',tip:'קצב של 60 לדקה מרגיע.'},
+ {k:['ענן','עננים','מרחף','מרחפים','לרחף','עפים','לעוף','בלון','שמיים'],he:'ריחוף',type:'transition',dur:4,en:'A soft airy whoosh of floating gently upward, light dreamy rising swell',tip:'מעבר טוב כשהסיפור "עולה למעלה".'},
+ {k:['צעד','צעדים','הולכים','דשא','חול','שביל'],he:'צעדים רכים',type:'oneshot',dur:5,en:'Soft slow barefoot footsteps walking on grass, quiet and gentle',tip:'"barefoot on grass" נותן צעדים רכים.'},
+ {k:['פרפר','פרפרים','כנפיים'],he:'משק כנפיים',type:'oneshot',dur:2,en:'Very light delicate fluttering of tiny wings passing by, soft and airy',tip:'צליל עדין מאוד; אפשר להגביר בכלי.'},
+ {k:['לוויתן','לווייתן','דולפין','דולפינים','מתחת','צוללים'],he:'מתחת למים',type:'ambience',dur:3,en:'Peaceful underwater ambience with soft muffled bubbles and a distant gentle whale song',tip:'"muffled" נותן תחושת מים.'},
+ {k:['דלת','שער','נפתח','נפתחת'],he:'דלת נפתחת',type:'oneshot',dur:3,en:'An old wooden door opening slowly and softly with a gentle low creak, friendly and not scary',tip:'"not scary" חיוני — חריקה היא צליל של סרטי אימה.'},
+ {k:['שמש','בוקר','זריחה','אחו'],he:'בוקר באחו',type:'ambience',dur:3,en:'Calm early morning in a meadow, soft birdsong in the distance, light breeze, peaceful',tip:'רקע בהיר, טוב לסיום וחזרה לערנות.'},
+ {k:['מוזיקה','מנגינה'],he:'מוזיקת רקע רכה',type:'background',dur:3,music:true,en:'A soft warm ambient pad with slow sustained tones, dreamy and spacious, no melody and no beat',tip:'בלי מנגינה וקצב כדי לא להתחרות בקול.'}];
+const BG_DEFAULT=DICT[DICT.length-1];
+const norm=s=>String(s).replace(/[֑-ׇ]/g,'').replace(/[^א-תa-z]/gi,'');
+const strip=w=>w.replace(/^[והבלמשכ]{1,2}/,'');
+const dmatch=(d,w)=>d.k.some(k=>k.length<=2?(w===k||strip(w)===k):w.includes(k));
+function detect(a,b){const ws=S.words.slice(Math.max(0,a-2),b+3).map(w=>norm(w.t));return DICT.filter(d=>ws.some(w=>dmatch(d,w)))}
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+const TYPE_EN={ambience:'continuous steady background ambience with a consistent level, no sudden events, seamless loop',oneshot:'a single isolated sound with a soft clean start and a natural gentle fade-out, no background noise',transition:'a smooth gradual swell with a soft attack and a slow release, no hard hit'};
+const INT_EN={vsoft:'very soft, distant and quiet',soft:'soft and gentle',present:'clear and present but still gentle'};
+const isAmb=o=>o.type==='ambience'||o.type==='background';
+function buildPrompt(o){const base=(o.en||'').trim().replace(/[.,\s]+$/,'')||'[describe the sound in English]';
+  return `${cap(base)}, ${INT_EN[o.intensity]||INT_EN.soft}. ${cap(TYPE_EN[isAmb(o)?'ambience':o.type])}. Soothing and calming for a children's guided meditation, warm tone, no harsh or high-pitched sounds, nothing scary, no voices${o.music?'':', no music'}. High quality stereo recording.`}
+function gen(o){const a=isAmb(o);let L=0;if(a){const[s,e]=orderSpan(o);L=e-s}return{dur:a?Math.min(30,Math.max(10,Math.ceil(L))):(+o.dur||3),infl:a?0.3:o.type==='transition'?0.45:0.6,loop:a,L}}
+function explain(o){const g=gen(o),a=isAmb(o),d=DICT.find(x=>x.en===o.en);
+  const why=[];if(o.why)why.push(o.why);why.push('התיאור באנגלית הוא הבסיס: ElevenLabs עובד הכי טוב עם תיאור פיזי (מקור הצליל, על מה, מאיזה מרחק) ולא עם רגש כללי.');
+  why.push(a?'"continuous steady background ambience… seamless loop" מבקש משטח רציף בלי אירועים, כדי שלא יקפוץ באמצע משפט ושאפשר יהיה לחבר בלופ בלי תפר.':o.type==='oneshot'?'"a single isolated sound… no background noise" מבקש צליל אחד נקי שאפשר להניח בדיוק על המילה.':'"smooth gradual swell, soft attack" מבקש מעבר שמתנפח לאט במקום מכה.');
+  why.push('החלק "for a children\'s guided meditation… nothing scary, no voices" מונע צלילים חדים, מאיימים או דיבור שיתחרו בקול שלך.');if(d)why.push(d.tip);
+  const set=[`משך ${g.dur} שניות. `+(a?(g.L>30?`הקטע אורך ${fmt0(g.L)}, ו-ElevenLabs מייצר עד 30 שניות, לכן הכלי ינגן את הקובץ בלופ לכל האורך.`:'מכסה את הקטע עם מרווח לדעיכה.'):'מספיק לצליל ולדעיכה הטבעית שלו.'),
+   `Prompt influence: ${g.infl}. `+(a?'ערך נמוך נותן רקע טבעי ומגוון.':'ערך בינוני-גבוה מחייב להיצמד לתיאור.'),`Loop: ${g.loop?'להפעיל אם האפשרות מופיעה.':'כבוי.'}`,'כדאי לייצר 3–4 גרסאות ולבחור את הרכה והנקייה.'];
+  const listen=a?['העוצמה אחידה לאורך כל הקובץ?','אין אירועים פתאומיים?','נעים להקשיב 30 שניות ברצף?']:['הצליל מתחיל מיד, בלי שקט ארוך לפניו?','יש צליל אחד ולא רצף?','לא חד מדי לאוזני ילד?'];
+  const fix=['חזק או חד מדי: להוסיף "muffled, distant, very soft, low-pass filtered".','נשמע מלאכותי: להוריד את Prompt influence ב-0.1.','לא מה שביקשת: להעלות Prompt influence או לתאר את מקור הצליל פיזית יותר.','נכנסו מוזיקה או דיבור: לכתוב בתחילת הפרומפט "No music, no speech:".'];
+  return{why,set,listen,fix}}
+const fname=o=>String(o.n).padStart(2,'0')+'_'+((o.en||'effect').toLowerCase().replace(/[^a-z ]/g,'').trim().split(/\s+/).filter(w=>!['a','an','the','of','on','with','and'].includes(w)).slice(0,3).join('-')||'effect')+'.mp3';
+function ctxWords(o){if(o.w0==null)return'';const a=o.w0,b=o.w1??o.w0;if(b-a>10)return S.words.slice(a,a+5).map(w=>w.t).join(' ')+' … '+S.words.slice(b-2,b+1).map(w=>w.t).join(' ');return S.words.slice(a,b+1).map(w=>w.t).join(' ')}
+function defTrack(type){return trackOfKind(TYPE_T[type]||'fx').id}
+function addOrder(v,silent){const o=Object.assign({id:uid(),n:S.nextN++,label:'אפקט',en:'',type:'oneshot',intensity:'soft',dur:3,music:false,w0:null,w1:null,at:null,track:null,origin:'ידני',why:'',clip:null},v);if(!o.track)o.track=defTrack(o.type);S.orders.push(o);return o}
+async function suggest(auto){if(!S.words.length){if(!auto)toast('קודם צריך תמלול');return}
+  const btn=$('#osug');btn.disabled=true;const old=btn.textContent;btn.textContent='חושב…';
+  try{let items=null;
+    if(gkey()){try{const list=S.sentences.map((s,i)=>`${i}. [${fmt0(WT[s.a]?.[0])}] ${sText(s)}`).join('\n');
+        const j=await gemini(LS.get('medi.xmodel','gemini-3.8-flash'),{contents:[{role:'user',parts:[{text:SUG_PROMPT+'\n\nSentences:\n'+list}]}],generationConfig:{temperature:0.4,responseMimeType:'application/json',
+          responseSchema:{type:'ARRAY',items:{type:'OBJECT',properties:{kind:{type:'STRING',enum:['background','ambience','oneshot','transition']},start_sentence:{type:'INTEGER'},start_word:{type:'STRING'},end_sentence:{type:'INTEGER'},label_he:{type:'STRING'},prompt_en:{type:'STRING'},duration_sec:{type:'NUMBER'},reason_he:{type:'STRING'}},required:['kind','start_sentence','start_word','label_he','prompt_en','reason_he']}}}});
+        const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');items=JSON.parse(txt).map(x=>{const s=S.sentences[clamp(x.start_sentence|0,0,S.sentences.length-1)];let w0=s.a;const nw=norm(x.start_word||'');
+          for(let i=s.a;i<=s.b;i++){const q=norm(S.words[i].t);if(nw&&(q===nw||q.includes(nw)||nw.includes(q)&&q.length>2)){w0=i;break}}
+          const es=S.sentences[clamp((x.end_sentence??x.start_sentence)|0,0,S.sentences.length-1)];
+          return{type:x.kind,label:x.label_he,en:x.prompt_en,dur:clamp(+x.duration_sec||3,1,10),why:x.reason_he,origin:'Gemini',w0:x.kind==='background'?null:w0,w1:x.kind==='ambience'?Math.max(w0,es.b):null,music:/pad|chime|bowl|bell|tone/i.test(x.prompt_en||'')}})}
+      catch(e){console.warn(e);if(!auto)toast('Gemini לא הצליח להציע ('+e.message+'). משתמש במילון המקומי')}}
+    if(!items){items=[];let lastT=-99;const used=new Set();for(const s of S.sentences){for(let i=s.a;i<=s.b;i++){const d=DICT.find(d=>d!==BG_DEFAULT&&dmatch(d,norm(S.words[i].t)));if(!d)continue;const t=WT[i]?.[0]??0;
+          if(t-lastT<15||used.has(d.he+'|'+Math.floor(t/60)))break;used.add(d.he+'|'+Math.floor(t/60));lastT=t;items.push({type:d.type,label:d.he,en:d.en,dur:d.dur,music:!!d.music,origin:'מילון',w0:i,w1:d.type==='ambience'?s.b:null,why:''});break}}
+      items.unshift({type:'background',label:'רקע עדין לכל המדיטציה',en:BG_DEFAULT.en,music:true,intensity:'vsoft',origin:'מילון',why:''})}
+    pushUndo();S.orders=S.orders.filter(o=>o.clip||o.origin==='ידני');
+    for(const it of items){if(it.type==='background'&&S.orders.some(o=>o.type==='background'))continue;addOrder({...it,intensity:it.intensity||(it.type==='background'?'vsoft':'soft')})}
+    afterEdit();toast(`נוספו ${items.length} הזמנות אפקטים`)}
+  finally{btn.disabled=false;btn.textContent=old}}
+const SUG_PROMPT=`You are a sound designer for guided meditations for children, narrated in Hebrew. Below are the numbered sentences of the narration with start times.
+Suggest sound effects that will deepen the experience at specific moments, plus exactly one gentle background bed for the whole meditation.
+Rules: everything calm and soft, never scary, sudden or loud; on average no more than one effect per 20-30 seconds; prefer sounds that match imagery the narrator describes (sea, wind, birds, rain, stars, breathing, forest, night) and soft transitions when the scene changes; never put a sound under every sentence.
+For each suggestion return:
+- kind: "background" (whole meditation bed), "ambience" (a bed lasting across a few sentences), "oneshot" (one short sound on a word) or "transition" (soft swell between scenes)
+- start_sentence: sentence number where it starts
+- start_word: one word copied exactly from that sentence where the sound should start
+- end_sentence: for ambience, the sentence number where it ends
+- label_he: short Hebrew name of the sound
+- prompt_en: a concrete physical English description of the sound for ElevenLabs Sound Effects, 10-25 words (source, material, distance, rhythm)
+- duration_sec: for oneshot/transition, 1-10 seconds
+- reason_he: one short Hebrew sentence explaining why it fits this moment`;
+function placeOrderFile(o,id){recalc();const buf=SRC[id].buf,[st,en]=orderSpan(o),a=isAmb(o);
+  let c=o.clip&&S.clips.find(x=>x.id===o.clip);
+  if(c){c.src=id;c.in=0;if(!a)c.len=buf.duration;c.label=o.label}
+  else{c=newClip({track:o.track,src:id,start:st,len:a?en-st:buf.duration,loop:a,gain:o.type==='background'?0.35:a?0.5:0.8,fi:a?3:0,fo:a?4:0.4,label:o.label,order:o.id,full:o.type==='background'});
+    if(o.w0!=null&&WT[o.w0]){c.aw=o.w0;c.ao=0}S.clips.push(c);o.clip=c.id}}
+async function orderFile(o,f){try{const id=await addSource(f,f.name);pushUndo();placeOrderFile(o,id);afterEdit();toast(`אפקט ${o.n} נכנס לציר`)}catch(e){toast('לא הצלחתי לקרוא את הקובץ')}}
+function orderCard(o){const[st,en]=orderSpan(o),g=gen(o),T=trk(o.track),done=!!o.clip&&S.clips.some(c=>c.id===o.clip),q=ctxWords(o);
+  return`<article class="oc${hl===o.id?' hl':''}" data-id="${o.id}" style="--c:${KIND_C[T?.kind||'fx']}">
+  <header><span class="num">${o.n}</span><div><b>${esc(o.label)}</b><small>${TN[o.type]} · שכבת ${esc(T?.name||'')} · ${fmt0(st)}${isAmb(o)?'–'+fmt0(en):''}</small></div><span class="chip g">${esc(o.origin)}</span><span class="chip ${done?'ok':'wait'}">${done?'בציר':'ממתין לקובץ'}</span></header>
+  ${q?`<p class="q2">על המילים: «${esc(q)}»</p>`:''}${o.why?`<p class="why">${esc(o.why)}</p>`:''}
+  <div class="pr"><code>${esc(buildPrompt(o))}</code><span class="gs">משך ${g.dur} ש׳ · Prompt influence ${g.infl} · Loop ${g.loop?'כן':'לא'} · שם קובץ: <span dir="ltr" style="white-space:nowrap">${esc(fname(o))}</span></span></div>
+  <details><summary>איך לייצר את זה ב-ElevenLabs</summary>${(()=>{const x=explain(o),L=a=>`<ul>${a.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`;return`<h4>למה הפרומפט בנוי כך</h4>${L(x.why)}<h4>הגדרות</h4>${L(x.set)}<h4>מה לבדוק</h4>${L(x.listen)}<h4>אם לא טוב</h4>${L(x.fix)}`})()}</details>
+  <footer><button data-a="copy" class="sm">העתקת פרומפט</button><label class="btn sm${done?'':' pri'}">${done?'החלפת קובץ':'העלאת הקובץ מ-ElevenLabs'}<input type="file" accept="audio/*" data-a="file" hidden></label><button data-a="go" class="sm">למיקום</button><button data-a="edit" class="sm">עריכה</button><button data-a="del" class="sm ghost">מחיקה</button></footer></article>`}
+function renderOrders(){recalc();const E=[...S.orders].sort((a,b)=>orderSpan(a)[0]-orderSpan(b)[0]);
+  $('#orl').innerHTML=E.length?E.map(orderCard).join(''):`<p class="empty">עוד אין הזמנות. אחרי התמלול Gemini מציע אפקטים לבד, ואפשר גם לבחור מילים בטקסט וללחוץ "הזמנת אפקט כאן". כל הזמנה מקבלת פרומפט מוכן ל-ElevenLabs, ו"מייל ההזמנות" שולח את כולן מסודרות.</p>`}
+function focusOrder(id){hl=id;renderOrders();const c=$(`.oc[data-id="${id}"]`);c&&c.scrollIntoView({block:'nearest',behavior:'smooth'})}
+$('#orl').addEventListener('click',async ev=>{const b=ev.target.closest('button[data-a]');if(!b)return;const o=S.orders.find(x=>x.id===b.closest('.oc').dataset.id),a=b.dataset.a;
+  if(a==='copy')toast(await copyText(buildPrompt(o))?'הפרומפט הועתק':'ההעתקה נכשלה');
+  if(a==='go'){const t=orderSpan(o)[0];seekTo(t);sc.scrollLeft=X(t)-sc.clientWidth/2}
+  if(a==='edit')openFx(o.id);
+  if(a==='del'&&await confirmBox(`למחוק את הזמנה ${o.n}?`,o.clip?'הקליפ שכבר בציר יישאר.':o.label,'מחיקה')){pushUndo();S.orders=S.orders.filter(x=>x!==o);afterEdit()}});
+$('#orl').addEventListener('change',ev=>{const t=ev.target;if(t.dataset.a==='file'&&t.files[0]){orderFile(S.orders.find(x=>x.id===t.closest('.oc').dataset.id),t.files[0]);t.value=''}});
+$('#bulk').onchange=async ev=>{let ok=0,bad=0;for(const f of ev.target.files){const m=f.name.match(/^0*(\d+)/),o=m&&S.orders.find(x=>x.n===+m[1]);if(o){await orderFile(o,f);ok++}else bad++}ev.target.value='';toast(`נטענו ${ok} קבצים`+(bad?` · ${bad} לא שויכו (השם צריך להתחיל במספר ההזמנה)`:''))};
+$('#osug').onclick=()=>suggest(false);
+$('#obg').onclick=()=>openFx(null,{type:'background'});
+$('#oat').onclick=()=>openFx(null,{at:cur});
+
+/* דיאלוג הזמנה */
 let fxCtx=null;
-function openFx(id,preset){const F=$('#fxf').elements;let e,hits=[];
-  if(id){e=S.effects.find(x=>x.id===id);fxCtx={id};$('#fxh').textContent=`עריכת אפקט ${e.n}`}
-  else{e={type:'oneshot',intensity:'soft',label:'',en:'',dur:3,len:20,music:false};$('#fxh').textContent='אפקט חדש';
-    if(sel&&S.words.length){fxCtx={w0:sel.a,w1:sel.b};hits=detect(sel.a,sel.b);const d=hits[0];if(d)Object.assign(e,{label:d.he,en:d.en,type:d.type,dur:d.dur,music:!!d.music});else e.type=sel.b>sel.a?'ambience':'oneshot';if(sel.b>sel.a&&d)e.type=d.type}
-    else if(preset==='bg'){const d=DICT.find(x=>x.he==='מוזיקת רקע רכה');fxCtx={abs:true,at:0,full:true};Object.assign(e,{label:'רקע עדין לכל המדיטציה',en:d.en,type:'ambience',music:true,intensity:'vsoft'});$('#fxh').textContent='רקע עדין לכל המדיטציה'}
-    else fxCtx={abs:true,at:cur}}
-  const ab=id?e.abs:fxCtx.abs,full=id?e.full:fxCtx.full;
-  e.layer=e.layer||(e.type==='ambience'&&S.layers.some(l=>l.id==='bg')?'bg':(S.layers.find(l=>l.id==='fx')||S.layers[0]).id);
-  $('#fxlayer').innerHTML=S.layers.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');if(!S.layers.some(l=>l.id===e.layer))e.layer=S.layers[0].id;
-  $('#fxw').textContent=full?`לאורך כל המדיטציה (00:00–${fmt0(narEnd()+4)}). אפשר לבחור מההצעות או לתאר רקע אחר, למשל גלים רחוקים או יער שקט.`:id?(e.abs?`בזמן ${fmt0(e.at)}`:`על המילים: «${ctxWords(e)}»`):ab?`בנקודה ${fmt0(cur)} על הציר`:`על המילים: «${S.words.slice(sel.a,sel.b+1).map(w=>w.t).join(' ')}»`;
-  F.label.value=e.label;F.en.value=e.en;F.type.value=e.type;F.intensity.value=e.intensity||'soft';F.dur.value=e.dur||3;F.len.value=e.len||20;F.music.checked=!!e.music;F.layer.value=e.layer;fxCtx.layerTouched=!!id;
-  $('#lenL').hidden=!ab||full;if(!id&&!hits.length&&sel)hits=[];
+function renderFxTrackSel(){$('#fxtrack').innerHTML=S.tracks.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}
+function openFx(id,ctx){const F=$('#fxf').elements;let o,hits=[];renderFxTrackSel();
+  if(id){o=S.orders.find(x=>x.id===id);fxCtx={id};$('#fxh').textContent=`עריכת הזמנה ${o.n}`}
+  else{fxCtx={...ctx};o={type:'oneshot',intensity:'soft',label:'',en:'',dur:3,music:false};$('#fxh').textContent='הזמנת אפקט';
+    if(ctx.type==='background'){Object.assign(o,{type:'background',label:'רקע עדין לכל המדיטציה',en:BG_DEFAULT.en,music:true,intensity:'vsoft'})}
+    else if(ctx.w0!=null){hits=detect(ctx.w0,ctx.w1);const d=hits[0];if(d)Object.assign(o,{label:d.he,en:d.en,type:d.type==='background'?'ambience':d.type,dur:d.dur,music:!!d.music});else o.type=ctx.w1>ctx.w0?'ambience':'oneshot'}}
+  o.track=o.track||defTrack(o.type);
+  $('#fxw').textContent=o.type==='background'?`לאורך כל המדיטציה (00:00–${fmt0(voiceEnd()+4)})`:(id?o.w0:ctx.w0)!=null?`על המילים: «${id?ctxWords(o):S.words.slice(ctx.w0,ctx.w1+1).map(w=>w.t).join(' ')}»`:`בזמן ${fmt0(id?o.at:ctx.at)} על הציר`;
+  F.label.value=o.label;F.en.value=o.en;F.type.value=o.type;F.intensity.value=o.intensity||'soft';F.dur.value=o.dur||3;F.music.checked=!!o.music;F.track.value=o.track;fxCtx.tt=!!id;
   const order=[...hits,...DICT.filter(d=>!hits.includes(d))];$('#fxs').innerHTML=order.map(d=>`<button type="button" data-d="${DICT.indexOf(d)}" class="${hits.includes(d)?'hit':''}">${esc(d.he)}</button>`).join('');
   updFx();const dlg=$('#fxd');dlg.returnValue='';dlg.showModal()}
-function fxVals(){const F=$('#fxf').elements;return{label:F.label.value.trim()||'אפקט',en:F.en.value.trim(),type:F.type.value||'oneshot',intensity:F.intensity.value||'soft',layer:F.layer.value,dur:Math.min(30,Math.max(0.5,+F.dur.value||3)),len:+F.len.value||20,music:F.music.checked}}
-function updFx(){const v=fxVals();$('#fxp').textContent=buildPrompt(v);$('#durL').hidden=v.type==='ambience';$('#fxwarn').textContent=v.en?(/[א-ת]/.test(v.en)?'כדאי לכתוב את התיאור באנגלית, כי ElevenLabs מבין אנגלית הרבה יותר טוב.':''):'כתבו תיאור קצר באנגלית או בחרו הצעה מוכנה.'}
-$('#fxf').addEventListener('input',ev=>{if(fxCtx&&ev.target.name==='layer')fxCtx.layerTouched=true;
-  if(fxCtx&&!fxCtx.layerTouched&&ev.target.name==='type'){const F=$('#fxf').elements;const want=F.type.value==='ambience'?'bg':'fx';if(S.layers.some(l=>l.id===want))F.layer.value=want}updFx()});
-$('#fxs').addEventListener('click',ev=>{const b=ev.target.closest('[data-d]');if(!b)return;const d=DICT[+b.dataset.d],F=$('#fxf').elements;F.label.value=d.he;F.en.value=d.en;F.type.value=d.type;F.dur.value=d.dur;F.music.checked=!!d.music;updFx()});
-$('#fxd').addEventListener('close',()=>{if($('#fxd').returnValue!=='ok'||!fxCtx)return;const v=fxVals();
-  if(fxCtx.id){Object.assign(S.effects.find(x=>x.id===fxCtx.id),v);hl=fxCtx.id}
-  else{const amb=v.type==='ambience';const e={id:uid(),n:S.nextN++,...v,vol:fxCtx.full?0.35:amb?0.5:0.8,fi:fxCtx.full?4:amb?3:0,fo:fxCtx.full?6:amb?4:0.5,off:0,loop:true,duck:true,mute:false,tail:2,file:''};
-    if(fxCtx.abs){e.abs=true;e.at=fxCtx.at;if(fxCtx.full)e.full=true}else{e.w0=fxCtx.w0;e.w1=fxCtx.w1}S.effects.push(e);hl=e.id;sel=null}
-  fxCtx=null;save();renderTx();renderSel();renderLayers();renderFx();layoutTL();const c=$(`.fxc[data-id="${hl}"]`);c&&c.scrollIntoView({block:'nearest',behavior:'smooth'})});
+function fxVals(){const F=$('#fxf').elements;return{label:F.label.value.trim()||'אפקט',en:F.en.value.trim(),type:F.type.value||'oneshot',intensity:F.intensity.value||'soft',dur:clamp(+F.dur.value||3,0.5,30),music:F.music.checked,track:F.track.value}}
+function updFx(){const v=fxVals();$('#fxp').textContent=buildPrompt(v);$('#durL').hidden=isAmb(v);$('#fxwarn').textContent=v.en?(/[א-ת]/.test(v.en)?'כדאי לכתוב את התיאור באנגלית — ElevenLabs מבין אנגלית הרבה יותר טוב.':''):'כתבו תיאור קצר באנגלית או בחרו הצעה מוכנה.'}
+$('#fxf').addEventListener('input',ev=>{const F=$('#fxf').elements;if(ev.target.name==='track')fxCtx.tt=true;if(ev.target.name==='type'&&!fxCtx.tt)F.track.value=defTrack(F.type.value);updFx()});
+$('#fxs').addEventListener('click',ev=>{const b=ev.target.closest('[data-d]');if(!b)return;const d=DICT[+b.dataset.d],F=$('#fxf').elements;F.label.value=d.he;F.en.value=d.en;F.type.value=d.type;F.dur.value=d.dur;F.music.checked=!!d.music;if(!fxCtx.tt)F.track.value=defTrack(d.type);updFx()});
+$('#fxd').addEventListener('close',()=>{if($('#fxd').returnValue!=='ok'||!fxCtx)return;const v=fxVals();pushUndo();
+  if(fxCtx.id){const o=S.orders.find(x=>x.id===fxCtx.id);Object.assign(o,v);const c=o.clip&&S.clips.find(x=>x.id===o.clip);if(c){c.track=o.track;c.label=o.label}hl=o.id}
+  else{const o=addOrder({...v,w0:fxCtx.w0??null,w1:v.type==='ambience'?(fxCtx.w1??fxCtx.w0??null):null,at:fxCtx.at??null});if(v.type==='background'){o.w0=o.w1=null}hl=o.id;wsel=null}
+  fxCtx=null;afterEdit();focusOrder(hl)});
 
-/* ============ מייל ============ */
-function buildMail(){const E=[...S.effects].sort((a,b)=>span(a)[0]-span(b)[0]);const hr='━━━━━━━━━━━━━━━━━━━━━━',cut='- - - - - - - - - - - - - - - - - - - -';
-  const L=['שלום,','',`רשימת האפקטים לייצור עבור המדיטציה "${S.name}": ${E.length} אפקטים, אורך כולל ${fmt0(total(true))}.`,'','איך עובדים:',
-  '1. נכנסים ל-ElevenLabs ← Sound Effects.','2. מעתיקים את הפרומפט של כל אפקט (כל הטקסט שבין שני הקווים המקווקווים) ומדביקים בשדה התיאור.',
-  '3. מכוונים את ההגדרות שמופיעות מעל הפרומפט: משך, Prompt influence ו-Loop.','4. מייצרים 3–4 גרסאות, מקשיבים לפי "מה לבדוק", ומורידים את הטובה.',
-  '5. שומרים בשם הקובץ המומלץ. המספר בתחילת השם מאפשר להעלות את כל הקבצים יחד ב"העלאה מרוכזת", והכלי ישייך כל קובץ לאפקט שלו.',''];
-  for(const e of E){const g=gen(e),x=explain(e),[st,en]=span(e),c=ctxWords(e);
-    L.push(hr,`אפקט ${e.n}: ${e.label} (${TN[e.type]})`,hr,`מיקום: ${fmt0(st)}${e.type==='ambience'?' – '+fmt0(en):''}${c?` · על המילים: "${c}"`:''}`,
-     `שכבה: ${layerOf(e).name}`,`הגדרות: משך ${g.dur} שניות | Prompt influence: ${g.infl} | Loop: ${g.loop?'כן':'לא'}`,`שם קובץ: ${fname(e)}`,'','פרומפט להעתקה:',cut,buildPrompt(e),cut,'',
-     'למה הפרומפט בנוי כך:',...x.why.map(s=>'• '+s),'','ההגדרות:',...x.set.map(s=>'• '+s),'','מה לבדוק כשמקשיבים:',...x.listen.map(s=>'• '+s),'','אם התוצאה לא טובה:',...x.fix.map(s=>'• '+s),'')}
+/* מייל */
+function buildMail(){const E=[...S.orders].sort((a,b)=>orderSpan(a)[0]-orderSpan(b)[0]),hr='━━━━━━━━━━━━━━━━━━━━━━',cut='- - - - - - - - - - - - - - - - - - - -';
+  const L=['שלום,','',`הזמנות האפקטים למדיטציה "${S.name}": ${E.length} אפקטים, אורך כולל ${fmt0(total())}.`,'','איך עובדים:','1. נכנסים ל-ElevenLabs ← Sound Effects.','2. מעתיקים את הפרומפט (כל הטקסט שבין שני הקווים המקווקווים) ומדביקים בשדה התיאור.','3. מכוונים את ההגדרות שמעל הפרומפט: משך, Prompt influence ו-Loop.','4. מייצרים 3–4 גרסאות, מקשיבים לפי "מה לבדוק", ומורידים את הטובה.','5. שומרים בשם הקובץ המומלץ, ואז ב"העלאה מרוכזת" כל קובץ נכנס לבד למקום שלו בציר.',''];
+  for(const o of E){const g=gen(o),x=explain(o),[st,en]=orderSpan(o),q=ctxWords(o);
+    L.push(hr,`אפקט ${o.n}: ${o.label} (${TN[o.type]})`,hr,`מיקום: ${fmt0(st)}${isAmb(o)?' – '+fmt0(en):''}${q?` · על המילים: "${q}"`:''}`,`שכבה: ${trk(o.track)?.name||''}`,`הגדרות: משך ${g.dur} שניות | Prompt influence: ${g.infl} | Loop: ${g.loop?'כן':'לא'}`,`שם קובץ: ${fname(o)}`,'','פרומפט להעתקה:',cut,buildPrompt(o),cut,'',
+      'למה הפרומפט בנוי כך:',...x.why.map(s=>'• '+s),'','ההגדרות:',...x.set.map(s=>'• '+s),'','מה לבדוק כשמקשיבים:',...x.listen.map(s=>'• '+s),'','אם התוצאה לא טובה:',...x.fix.map(s=>'• '+s),'')}
   return L.join('\n')}
-function openMail(){if(!S.effects.length){toast('עוד אין אפקטים ברשימה');return}const missing=S.effects.filter(e=>!(e.en||'').trim()).length;
-  $('#mto').value=LS.get('medi.email','');$('#msu').value=`אפקטים לייצור: ${S.name} (${S.effects.length})`;$('#mbody').value=buildMail();mNote();
-  if(missing)toast(`ל-${missing} אפקטים אין תיאור באנגלית`);$('#mld').showModal()}
-function mNote(){const n=encodeURIComponent($('#mbody').value).length;$('#mnote').textContent=n>14000?'המייל ארוך. אם Gmail לא נפתח עם כל הטקסט, לוחצים "העתקת כל המייל" ומדביקים בגוף ההודעה.':'אפשר לערוך את הטקסט לפני השליחה. ההודעה נפתחת כטיוטה, והשליחה עצמה נעשית מתוך המייל.'}
-$('#mbody').addEventListener('input',mNote);
-$('#mto').addEventListener('change',()=>LS.set('medi.email',$('#mto').value.trim()));
-$('#mgm').onclick=()=>{const u=`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent($('#mto').value.trim())}&su=${encodeURIComponent($('#msu').value)}&body=${encodeURIComponent($('#mbody').value)}`;window.open(u,'_blank')};
+$('#omail').onclick=()=>{if(!S.orders.length){toast('עוד אין הזמנות');return}$('#mto').value=LS.get('medi.email','');$('#msu').value=`הזמנות אפקטים: ${S.name} (${S.orders.length})`;$('#mbody').value=buildMail();mNote();$('#mld').showModal()};
+function mNote(){$('#mnote').textContent=encodeURIComponent($('#mbody').value).length>14000?'המייל ארוך. אם Gmail לא נפתח עם כל הטקסט, לוחצים "העתקת כל המייל" ומדביקים.':'ההודעה נפתחת כטיוטה; השליחה עצמה נעשית מתוך המייל.'}
+$('#mbody').addEventListener('input',mNote);$('#mto').addEventListener('change',()=>LS.set('medi.email',$('#mto').value.trim()));
+$('#mgm').onclick=()=>window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent($('#mto').value.trim())}&su=${encodeURIComponent($('#msu').value)}&body=${encodeURIComponent($('#mbody').value)}`,'_blank');
 $('#mmt').onclick=()=>{location.href=`mailto:${encodeURIComponent($('#mto').value.trim())}?subject=${encodeURIComponent($('#msu').value)}&body=${encodeURIComponent($('#mbody').value)}`};
-$('#mcp').onclick=async()=>toast(await copyText($('#mbody').value)?'המייל הועתק':'ההעתקה נכשלה');
-$('#mcl').onclick=()=>$('#mld').close();
+$('#mcp').onclick=async()=>toast(await copyText($('#mbody').value)?'המייל הועתק':'ההעתקה נכשלה');$('#mcl').onclick=()=>$('#mld').close();
 
-/* ============ הגדרות ============ */
-function openSettings(){const F=$('#setf').elements;F.key.value=LS.get('medi.key','');F.lang.value=LS.get('medi.lang','he');F.model.value=LS.get('medi.model','scribe_v1');F.email.value=LS.get('medi.email','');const d=$('#setd');d.returnValue='';d.showModal()}
-$('#setd').addEventListener('close',()=>{if($('#setd').returnValue!=='ok')return;const F=$('#setf').elements;LS.set('medi.key',F.key.value.trim());LS.set('medi.lang',F.lang.value);LS.set('medi.model',F.model.value);if(narBuf)renderSrc();LS.set('medi.email',F.email.value.trim());toast('ההגדרות נשמרו')});
-$('#setb').onclick=openSettings;
+/* ================= וידאו ליוטיוב ================= */
+const MB='https://cdn.jsdelivr.net/npm/mediabunny@1.66.4/dist/bundles/mediabunny.min.mjs';
+function drawCover(cv,title,sub){const g=cv.getContext('2d'),W=cv.width,H=cv.height;const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#1e1748');gr.addColorStop(1,'#5f4bbd');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  let s=7;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;g.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<90;i++){g.beginPath();g.arc(rnd()*W,rnd()*H*0.6,rnd()*2.2+0.6,0,7);g.fill()}
+  const mg=g.createRadialGradient(W*0.74,H*0.3,10,W*0.74,H*0.3,260);mg.addColorStop(0,'rgba(255,246,216,.5)');mg.addColorStop(1,'rgba(255,246,216,0)');g.fillStyle=mg;g.fillRect(0,0,W,H);
+  g.fillStyle='#fff3cf';g.beginPath();g.arc(W*0.74,H*0.3,95,0,7);g.fill();g.fillStyle='#3a2f88';g.beginPath();g.arc(W*0.74+38,H*0.3-22,86,0,7);g.fill();
+  const hill=(y,c,a)=>{g.fillStyle=c;g.beginPath();g.moveTo(0,H);g.lineTo(0,y);g.bezierCurveTo(W*0.25,y-a,W*0.5,y+a,W*0.75,y-a*0.6);g.bezierCurveTo(W*0.85,y-a,W*0.95,y,W,y-a*0.3);g.lineTo(W,H);g.fill()};
+  hill(H*0.72,'#3a2f80',60);hill(H*0.82,'#2a8f86',40);hill(H*0.9,'#1d6b64',30);
+  g.fillStyle='#fff';g.textAlign='center';g.direction='rtl';g.font='700 104px Rubik, Assistant, sans-serif';g.fillText(title||'',W/2,H*0.45);g.font='500 50px Rubik, Assistant, sans-serif';g.fillStyle='rgba(255,255,255,.85)';g.fillText(sub||'',W/2,H*0.45+80)}
+function vPrev(){drawCover($('#vprev'),$('#vt').value,$('#vs').value)}
+$('#evid').onclick=async()=>{if(!S.clips.some(c=>SRC[c.src])){toast('אין עדיין שמע');return}$('#vt').value=$('#vt').value||S.name;$('#vs').value=$('#vs').value||'מדיטציה מונחית לילדים';try{await document.fonts.load('700 40px Rubik')}catch(e){}vPrev();$('#vst').textContent='';$('#vidd').showModal()};
+$('#vt').oninput=vPrev;$('#vs').oninput=vPrev;$('#vcl').onclick=()=>$('#vidd').close();
+$('#vgo').onclick=async()=>{const st=$('#vst'),bt=$('#vgo');bt.disabled=true;stop();
+  try{st.textContent='מכין את המיקס…';const mix=await renderMix();st.textContent='טוען את מקודד הווידאו…';const M=await import(MB);
+    const cv=document.createElement('canvas');cv.width=1920;cv.height=1080;drawCover(cv,$('#vt').value,$('#vs').value);
+    let fmtx='mp4',vc=await M.getFirstEncodableVideoCodec(['avc'],{width:1920,height:1080}),acx=await M.getFirstEncodableAudioCodec(['aac'],{numberOfChannels:2,sampleRate:mix.sampleRate});
+    if(!vc||!acx){fmtx='webm';vc=await M.getFirstEncodableVideoCodec(['vp9','vp8'],{width:1920,height:1080});acx=await M.getFirstEncodableAudioCodec(['opus'],{numberOfChannels:2,sampleRate:mix.sampleRate})}
+    if(!vc||!acx)throw new Error('הדפדפן לא תומך ביצירת וידאו. כדאי לנסות ב-Chrome מעודכן');
+    const out=new M.Output({format:fmtx==='mp4'?new M.Mp4OutputFormat({fastStart:'in-memory'}):new M.WebMOutputFormat(),target:new M.BufferTarget()});
+    const vs=new M.CanvasSource(cv,{codec:vc,quality:M.QUALITY_MEDIUM,keyFrameInterval:2});out.addVideoTrack(vs,{frameRate:1});
+    const as=new M.AudioBufferSource({codec:acx,quality:M.QUALITY_HIGH});out.addAudioTrack(as);await out.start();
+    const T=mix.duration,sr=mix.sampleRate;for(let t=0;t<T;t+=1){const d=Math.min(1,T-t);await vs.add(t,d);const n=Math.round(d*sr),a0=Math.round(t*sr);if(n>0){const ab=new AudioBuffer({length:n,sampleRate:sr,numberOfChannels:2});for(let ch=0;ch<2;ch++)ab.copyToChannel(mix.getChannelData(ch).subarray(a0,a0+n),ch);await as.add(ab)}
+      if(t%10===0)st.textContent=`יוצר וידאו… ${Math.round(t/T*100)}%`}
+    await out.finalize();dl(new Blob([out.target.buffer],{type:fmtx==='mp4'?'video/mp4':'video/webm'}),safe(S.name)+'.'+fmtx);st.textContent=`הווידאו ירד (${fmtx.toUpperCase()}). אפשר להעלות אותו ישר ליוטיוב.`}
+  catch(e){st.textContent='יצירת הווידאו נכשלה: '+e.message}finally{bt.disabled=false}};
 
-/* ============ אירועים ============ */
-$('#nfile').onchange=e=>{const f=e.target.files[0];if(f)setNarration(f);e.target.value=''};
-const drop=$('#drop');['dragenter','dragover'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();if(!narBuf)drop.classList.add('over')}));
-['dragleave','drop'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
-document.addEventListener('drop',e=>{const f=[...(e.dataTransfer?.files||[])].find(f=>f.type.startsWith('audio')||/\.(mp3|wav|m4a|ogg|aac)$/i.test(f.name));if(f&&!narBuf)setNarration(f)});
-$('#srcbar').addEventListener('click',e=>{if(e.target.id==='trb')transcribe()});
-$('#srcbar').addEventListener('change',e=>{if(e.target.id==='rfile'){const f=e.target.files[0];if(f)setNarration(f);e.target.value=''}});
-const tx=$('#tx');
-tx.addEventListener('click',ev=>{if(ev.target.id==='txgo'){transcribe();return}const pz=ev.target.closest('.pz');if(pz){S.pauses.splice(+pz.dataset.p,1);save();renderAfterTiming();return}
-  const w=ev.target.closest('.w');if(!w||w.isContentEditable)return;const i=+w.dataset.i;
-  if(ev.shiftKey&&sel)sel={a:Math.min(sel.a0,i),b:Math.max(sel.a0,i),a0:sel.a0};else sel={a:i,b:i,a0:i};
-  seekTo(WT[sel.a][0]);renderTx();renderSel();layoutTL()});
-tx.addEventListener('dblclick',ev=>{const w=ev.target.closest('.w');if(!w)return;const i=+w.dataset.i;w.textContent=S.words[i].t;w.contentEditable='true';w.focus();
-  const done=()=>{w.removeEventListener('blur',done);const t=w.textContent.trim();if(t)S.words[i].t=t;w.contentEditable='false';save();renderTx();layoutTL()};
-  w.addEventListener('blur',done);w.addEventListener('keydown',k=>{if(k.key==='Enter'){k.preventDefault();w.blur()}})});
-$('#selbar').addEventListener('click',ev=>{const b=ev.target.closest('[data-a]');if(!b||!sel)return;const a=b.dataset.a;
-  if(a==='fx')openFx(null);
-  if(a==='x'){sel=null;renderTx();renderSel();layoutTL()}
-  if(a==='pz'){const s=+b.dataset.s,k=S.pauses.findIndex(p=>p.w===sel.b);if(k>=0&&+S.pauses[k].sec===s)S.pauses.splice(k,1);else if(k>=0)S.pauses[k].sec=s;else S.pauses.push({w:sel.b,sec:s});save();renderAfterTiming()}});
-function renderAfterTiming(){renderSrc();renderTx();renderSel();renderFx();layoutTL();live()}
-$('#lyl').addEventListener('input',ev=>{const k=ev.target.dataset.lk;if(!k)return;const L=S.layers.find(l=>l.id===ev.target.closest('.ly').dataset.id);
-  L[k]=k==='name'?ev.target.value:k==='mute'?ev.target.checked:+ev.target.value;save();layoutTL();if(k!=='name')live()});
-$('#lyl').addEventListener('change',ev=>{if(ev.target.dataset.lk==='name')renderFx()});
-$('#lyl').addEventListener('click',async ev=>{if(ev.target.id==='lyadd'){S.layers.push({id:uid(),name:'שכבה '+(S.layers.length+1),vol:1,mute:false});save();renderLayers();layoutTL();const ins=document.querySelectorAll('#lyl .ly input[type=text]');const i=ins[ins.length-1];i&&(i.focus(),i.select());return}
-  const b=ev.target.closest('[data-la=del]');if(!b)return;const id=b.closest('.ly').dataset.id,L=S.layers.find(l=>l.id===id),n=S.effects.filter(e=>layerOf(e)===L).length;
-  const other=S.layers.find(l=>l.id!==id);if(!other)return;
-  if(!await confirmBox(`למחוק את השכבה "${L.name}"?`,n?`${n} האפקטים שבה יעברו לשכבה "${other.name}".`:'השכבה ריקה.','מחיקה'))return;
-  S.effects.forEach(e=>{if(layerOf(e)===L)e.layer=other.id});S.layers=S.layers.filter(l=>l!==L);save();renderLayers();renderFx();layoutTL();live()});
-$('#addBg').onclick=()=>{sel=null;renderSel();openFx(null,'bg')};
-$('#addAt').onclick=()=>{sel=null;renderSel();openFx(null)};
-$('#bulk').onchange=async ev=>{let ok=0,bad=[];for(const f of ev.target.files){const m=f.name.match(/^0*(\d+)/);const e=m&&S.effects.find(x=>x.n===+m[1]);if(e){await setEffectFile(e.id,f);ok++}else bad.push(f.name)}
-  ev.target.value='';toast(`נטענו ${ok} קבצים`+(bad.length?` · לא שויכו: ${bad.length} (השם צריך להתחיל במספר האפקט)`:''))};
-const fxl=$('#fxl');
-fxl.addEventListener('input',ev=>{const k=ev.target.dataset.k;if(!k)return;const e=S.effects.find(x=>x.id===ev.target.closest('.fxc').dataset.id);
-  e[k]=ev.target.type==='checkbox'?ev.target.checked:ev.target.tagName==='SELECT'?ev.target.value:+ev.target.value;if(k==='layer'){renderLayers();renderFx()}if(k==='vol')ev.target.nextElementSibling.textContent=Math.round(e.vol*100)+'%';save();layoutTL();live()});
-fxl.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.a==='file'){const f=t.files[0];if(f)setEffectFile(t.closest('.fxc').dataset.id,f);t.value=''}else if(t.dataset.k==='off'||t.dataset.k==='len')renderFx()});
-fxl.addEventListener('click',async ev=>{const b=ev.target.closest('button[data-a]');if(!b)return;const id=b.closest('.fxc').dataset.id,e=S.effects.find(x=>x.id===id),a=b.dataset.a;
-  if(a==='copy')toast(await copyText(buildPrompt(e))?'הפרומפט הועתק':'ההעתקה נכשלה');
-  if(a==='edit')openFx(id);
-  if(a==='play'){stop();cur=Math.max(0,span(e)[0]-1.5);play()}
-  if(a==='del'&&await confirmBox(`למחוק את אפקט ${e.n}?`,e.label,'מחיקה')){S.effects=S.effects.filter(x=>x.id!==id);delete effBlob[id];delete effBuf[id];save();renderTx();renderLayers();renderFx();layoutTL();live()}});
-function focusCard(id){hl=id;document.querySelectorAll('.fxc.hl').forEach(c=>c.classList.remove('hl'));const c=$(`.fxc[data-id="${id}"]`);if(c){c.classList.add('hl');c.scrollIntoView({block:'nearest',behavior:'smooth'})}}
-const inner=$('#inner'),sc=$('#sc');
-inner.addEventListener('pointerdown',ev=>{const blk=ev.target.closest('.blk');
-  if(blk){const e=S.effects.find(x=>x.id===blk.dataset.id),sx=ev.clientX,o0=+e.off||0,l0=parseFloat(blk.style.left);let moved=false;blk.setPointerCapture(ev.pointerId);
-    const mv=m=>{const dx=m.clientX-sx;if(Math.abs(dx)>3)moved=true;if(moved){e.off=Math.round((o0-dx/S.pps)*10)/10;blk.style.left=(l0-(e.off-o0)*S.pps)+'px'}};
-    const up=()=>{blk.removeEventListener('pointermove',mv);blk.removeEventListener('pointerup',up);if(moved){save();layoutTL();renderFx();live();focusCard(e.id)}else focusCard(e.id)};
-    blk.addEventListener('pointermove',mv);blk.addEventListener('pointerup',up);return}
-  const ws=ev.target.closest('#wl span');if(ws){const i=+ws.dataset.i;sel={a:i,b:i,a0:i};seekTo(WT[i][0]);renderTx();renderSel();layoutTL();return}
-  const x=ev.clientX-inner.getBoundingClientRect().left;seekTo(Math.max(0,TX(x)))});
-$('#lanes').addEventListener('click',ev=>{const b=ev.target.closest('[data-lm]');if(!b)return;const L=S.layers.find(l=>l.id===b.dataset.lm);L.mute=!L.mute;save();renderLayers();layoutTL();live()});
-let raf=0;sc.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(drawWave)});
-let lastW=0;new ResizeObserver(()=>{const w=sc.clientWidth;if(narBuf&&w&&Math.abs(w-lastW)>2){lastW=w;layoutTL()}else drawWave()}).observe(sc);
-function zoom(f){S.pps=Math.min(400,Math.max(6,S.pps*f));layoutTL();sc.scrollLeft=X(pos())-sc.clientWidth/2;drawWave();save()}
-$('#zi').onclick=()=>zoom(1.4);$('#zo').onclick=()=>zoom(1/1.4);
-$('#play').onclick=play;
-$('#nv').oninput=e=>{S.narVol=+e.target.value;save();live()};
-$('#nrm').onchange=e=>{S.normalize=e.target.checked;save()};
-$('#mp3').onclick=()=>exportMix('mp3');$('#wav').onclick=()=>exportMix('wav');
-$('#mail').onclick=openMail;
+/* ================= שמירה ופרויקטים ================= */
+let dbp=null;
+function db(){return dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('meditation-studio-2',1);r.onupgradeneeded=()=>r.result.createObjectStore('p',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function idb(mode,fn){const d=await db();return new Promise((res,rej)=>{const tx=d.transaction('p',mode);const r=fn(tx.objectStore('p'));tx.oncomplete=()=>res(r&&r.result);tx.onerror=()=>rej(tx.error)})}
+const setStat=m=>$('#stat').textContent=m;let saveT;
+function save(){clearTimeout(saveT);setStat('שומר…');saveT=setTimeout(async()=>{try{const blobs={};for(const k in S.srcs)if(SRC[k])blobs[k]=SRC[k].blob;await idb('readwrite',s=>s.put({id:S.id,name:S.name,updated:Date.now(),state:JSON.stringify(S),blobs}));LS.set('medi.last2',S.id);setStat('נשמר');refreshList()}catch(e){setStat('השמירה נכשלה')}},700)}
+async function refreshList(){try{const all=(await idb('readonly',s=>s.getAll()))||[];all.sort((a,b)=>b.updated-a.updated);const L=$('#plist');
+  L.innerHTML=(all.some(p=>p.id===S.id)?'':`<option value="${S.id}">${esc(S.name)}</option>`)+all.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');L.value=S.id}catch(e){}}
+async function loadState(st,blobs){stop();S=Object.assign(blank(),st);for(const k in SRC)delete SRC[k];for(const k in blobs||{}){try{await addSource(blobs[k],S.srcs[k]?.name,k)}catch(e){}}cur=0;sel=null;selClip=null;wsel=null;U=[];RD=[];renderAll();fitZoom();refreshList()}
+async function load(id){const r=await idb('readonly',s=>s.get(id));if(!r)return;setStat('טוען…');await loadState(JSON.parse(r.state),r.blobs);LS.set('medi.last2',S.id);setStat('')}
+async function exportProj(){setStat('מכין קובץ…');const o={app:'meditation-studio',v:2,state:S,blobs:{}};for(const k in S.srcs)if(SRC[k])o.blobs[k]={name:S.srcs[k].name,d:await b64(SRC[k].blob)};
+  dl(new Blob([JSON.stringify(o)],{type:'application/json'}),safe(S.name)+'.meditation.json');setStat('נשמר לקובץ')}
+async function importProj(f){try{const o=JSON.parse(await f.text());if(o.app!=='meditation-studio'||o.v!==2)throw 0;const blobs={};for(const k in o.blobs){const r=await fetch(o.blobs[k].d);blobs[k]=await r.blob()}
+  await loadState({...o.state,id:uid()},blobs);save();toast('הפרויקט נפתח')}catch(e){toast('זה לא קובץ פרויקט של הסטודיו (גרסה 2)')}}
 $('#pname').addEventListener('input',e=>{S.name=e.target.value||'מדיטציה';save()});
 $('#plist').onchange=e=>load(e.target.value);
-$('#pnew').onclick=()=>{stop();S=blank();narBlob=null;narBuf=null;effBlob={};effBuf={};cur=0;sel=null;renderAll();refreshList()};
-$('#pexp').onclick=exportProj;
-$('#pimp').onchange=e=>{const f=e.target.files[0];if(f)importProj(f);e.target.value=''};
-$('#pdel').onclick=async()=>{if(!await confirmBox(`למחוק את "${S.name}"?`,'הפרויקט יימחק מהדפדפן. קבצים שהורדת לא יימחקו.','מחיקה'))return;stop();
-  try{await idb('readwrite',s=>s.delete(S.id))}catch(e){}const all=((await idb('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.updated-a.updated);
-  if(all[0])load(all[0].id);else{S=blank();narBlob=null;narBuf=null;effBlob={};effBuf={};renderAll();refreshList()}};
-document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;
-  if(e.code==='Space'&&narBuf){e.preventDefault();play()}if(e.key==='Escape'&&sel){sel=null;renderTx();renderSel();layoutTL()}});
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>drawWave());
+$('#pnew').onclick=()=>{loadState(blank(),{})};
+$('#pexp').onclick=exportProj;$('#pimp').onchange=e=>{const f=e.target.files[0];if(f)importProj(f);e.target.value=''};
+$('#pdel').onclick=async()=>{if(!await confirmBox(`למחוק את "${S.name}"?`,'הפרויקט יימחק מהדפדפן. קבצים שהורדת לא יימחקו.','מחיקה'))return;try{await idb('readwrite',s=>s.delete(S.id))}catch(e){}
+  const all=((await idb('readonly',s=>s.getAll()))||[]).sort((a,b)=>b.updated-a.updated);if(all[0])load(all[0].id);else loadState(blank(),{})};
+function openSettings(){const F=$('#setf').elements;F.key.value=gkey();F.tmodel.value=LS.get('medi.tmodel','gemini-3.5-transcribe');F.xmodel.value=LS.get('medi.xmodel','gemini-3.8-flash');F.lang.value=LS.get('medi.lang','he-IL');F.email.value=LS.get('medi.email','');const d=$('#setd');d.returnValue='';d.showModal()}
+$('#setd').addEventListener('close',()=>{if($('#setd').returnValue!=='ok')return;const F=$('#setf').elements;LS.set('medi.gkey',F.key.value.trim());LS.set('medi.tmodel',F.tmodel.value.trim()||'gemini-3.5-transcribe');LS.set('medi.xmodel',F.xmodel.value.trim()||'gemini-3.8-flash');LS.set('medi.lang',F.lang.value);LS.set('medi.email',F.email.value.trim());toast('ההגדרות נשמרו')});
+$('#setb').onclick=openSettings;
 
-/* ============ התחלה ============ */
-(async()=>{try{const last=LS.get('medi.last','');const all=(await idb('readonly',s=>s.getAll()))||[];const pick=all.find(p=>p.id===last)||all.sort((a,b)=>b.updated-a.updated)[0];
-  if(pick){await load(pick.id);return}}catch(e){}renderAll();refreshList()})();
+/* ================= חיבור כללי ================= */
+function renderAll(){$('#pname').value=S.name;layoutTL(true);renderTx();renderSel();renderOrders();updUndo()}
+function updUndo(){$('#bundo').disabled=!U.length;$('#bredo').disabled=!RD.length}
+$('#play').onclick=play;$('#homeb').onclick=()=>{seekTo(0);sc.scrollLeft=TW};$('#recb').onclick=toggleRec;$('#recb2').onclick=toggleRec;
+$('#bsplit').onclick=doSplit;$('#bdel').onclick=()=>doDelete(true);$('#bsil').onclick=()=>doDelete(false);$('#bfi').onclick=()=>doFade('in');$('#bfo').onclick=()=>doFade('out');$('#bgain').onclick=doGain;
+$('#emp3').onclick=()=>exportAudio('mp3');$('#ewav').onclick=()=>exportAudio('wav');
+$('#bundo').onclick=undo;$('#bredo').onclick=redo;$('#zi').onclick=()=>zoom(1.4);$('#zo').onclick=()=>zoom(1/1.4);$('#zfit').onclick=fitZoom;
+$('#impf').onchange=e=>{importFiles(e.target.files);e.target.value=''};$('#impf2').onchange=e=>{importFiles(e.target.files);e.target.value=''};
+let dragN=0;document.addEventListener('dragenter',e=>{if(e.dataTransfer?.types?.includes('Files')){dragN++;$('#dropov').hidden=false}});
+document.addEventListener('dragleave',()=>{if(--dragN<=0){dragN=0;$('#dropov').hidden=true}});document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();dragN=0;$('#dropov').hidden=true;const fs=e.dataTransfer?.files;if(!fs||!fs.length)return;
+  const r0=inner.getBoundingClientRect();let at=null,tid=null;if(e.clientY>=r0.top&&e.clientY<=r0.bottom&&e.target.closest('#tl')){at=Math.max(0,TX(e.clientX-r0.left));tid=rowAtY(e.clientY-r0.top)?.t?.id}importFiles(fs,at,tid)});
+document.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable=true]')||document.querySelector('dialog[open]'))return;const k=e.key.toLowerCase(),m=e.ctrlKey||e.metaKey;
+  if(e.code==='Space'){e.preventDefault();rec?toggleRec():play()}
+  else if(m&&(k==='z'||k==='ז')&&!e.shiftKey){e.preventDefault();undo()}else if(m&&(k==='y'||k==='ט'||(k==='z'&&e.shiftKey))){e.preventDefault();redo()}
+  else if(m&&(k==='c'||k==='ב')){e.preventDefault();doCopy()}else if(m&&(k==='v'||k==='ה')){e.preventDefault();doPaste()}
+  else if(k==='delete'||k==='backspace'){e.preventDefault();doDelete(!e.shiftKey)}
+  else if(!m&&(k==='s'||k==='ד')){doSplit()}else if(!m&&(k==='r'||k==='ר')){toggleRec()}
+  else if(k==='home'){seekTo(0);sc.scrollLeft=TW}else if(k==='escape'){sel=null;selClip=null;wsel=null;renderOverlay();renderTx();renderSel()}});
+(async()=>{try{const last=LS.get('medi.last2','');const all=(await idb('readonly',s=>s.getAll()))||[];const pick=all.find(p=>p.id===last)||all.sort((a,b)=>b.updated-a.updated)[0];if(pick){await load(pick.id);return}}catch(e){}renderAll();refreshList()})();
+setInterval(updUndo,500);
 }
 </script>
 </body>

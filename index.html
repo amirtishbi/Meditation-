@@ -150,6 +150,9 @@ fieldset legend{font-weight:700;font-size:13.5px;margin-bottom:5px;width:100%}
 menu{display:flex;gap:6px;padding:0;margin:0;flex-wrap:wrap}
 textarea{width:100%;line-height:1.5}
 .note{margin:0;font-size:13px;color:var(--mut)}
+.mt{width:100%;border-collapse:collapse;margin:6px 0 10px}.mt td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:top}.mt td:first-child{color:var(--mut);width:42%}
+.mt td.nv{font-variant-numeric:tabular-nums;direction:ltr;text-align:right}.wn{color:var(--warn)}.okc{color:var(--ok)}
+#mixrep h4{margin:10px 0 2px;font-size:14px}
 #vprev{width:100%;border-radius:10px;border:1px solid var(--line);aspect-ratio:16/9}
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:50}
 #toast.on{opacity:1}
@@ -211,7 +214,7 @@ textarea{width:100%;line-height:1.5}
     <label class="btn">ייבוא קובץ שמע<input type="file" id="impf" accept="audio/*,.m4a,.mp3,.wav,.webm,.ogg" multiple hidden></label>
   </div>
   <div class="g">
-    <label class="ck" title="מגביר את המיקס הסופי לעוצמה אחידה"><input type="checkbox" id="nrm" checked> איזון עוצמה</label>
+    <button id="mixb" title="עיבוד, איזון עוצמות, Ducking ומאסטר — כולל מדדים">מיקס ודוח</button>
     <button id="emp3" class="pri">MP3</button><button id="ewav">WAV</button><button id="evid">וידאו ליוטיוב</button>
   </div>
 </div>
@@ -313,6 +316,14 @@ textarea{width:100%;line-height:1.5}
   <menu><button id="vgo" class="pri">יצירת הווידאו</button><button id="vcl" class="ghost">סגירה</button></menu>
 </div></dialog>
 
+<dialog id="mixd" style="width:min(860px,94vw)"><div class="dlg">
+  <h3>מיקס ודוח</h3>
+  <p class="where">המנוע מעבד את הקריינות, מאזן עוצמות לפי LUFS, מנמיך את המוזיקה בזמן דיבור, מוסיף לאפקטים חלל וריכוך, ומבצע מאסטר. כאן רואים את המדדים ומכיילים.</p>
+  <div id="mixrep" style="font-size:14px"></div>
+  <details><summary style="cursor:pointer;font-weight:700;color:var(--acc)">ערכי כיול</summary>
+  <div class="grid2" id="mixset" style="margin-top:10px"></div></details>
+  <menu><button id="mixcal" class="pri">ניתוח מחדש</button><button id="mixpre">הזזת הקריינות לפתיחה של 6 ש׳</button><button id="mixcl" class="ghost">סגירה</button></menu>
+</div></dialog>
 <dialog id="cfd"><form method="dialog" class="dlg"><h3 id="cfh">לאשר?</h3><p id="cfm" class="where"></p><menu><button value="ok" class="pri" id="cfo">אישור</button><button value="cancel" class="ghost">ביטול</button></menu></form></dialog>
 
 <div id="dropov" hidden>שחררו כאן את קובץ השמע</div>
@@ -358,7 +369,7 @@ let WT=[];
 function narClips(){return S.clips.filter(c=>c.src&&c.src===S.narSrc&&c.aw==null&&!c.full)}
 function recalc(){const N=narClips();WT=S.words.map(w=>{const c=N.find(c=>w.s>=c.in-1e-3&&w.s<c.in+c.len);if(!c)return null;const e=Math.min(w.e,c.in+c.len);return[c.start+(w.s-c.in),c.start+(e-c.in)]});
   for(const c of S.clips)if(c.aw!=null&&WT[c.aw])c.start=WT[c.aw][0]+c.ao;
-  const ve=voiceEnd();for(const c of S.clips)if(c.full)c.len=Math.max(2,ve+4-c.start)}
+  const ve=voiceEnd(),post=mixP().postSec;for(const c of S.clips)if(c.full)c.len=Math.max(2,ve+post+1-c.start)}
 function voiceEnd(){let e=0;for(const c of S.clips)if(!c.full&&trk(c.track)?.kind==='voice')e=Math.max(e,c.start+c.len);if(!e)for(const c of S.clips)if(!c.full)e=Math.max(e,c.start+c.len);return e}
 const ce=c=>c.start+c.len;
 function setStart(c,t){c.start=t;if(c.aw!=null&&WT[c.aw])c.ao=t-WT[c.aw][0]}
@@ -367,45 +378,121 @@ function orderSpan(o){let st,en;if(o.type==='background'){st=0;en=Math.max(10,vo
     if(o.type==='ambience'){const e1=o.w1!=null&&WT[o.w1]?WT[o.w1][1]:st+20;en=Math.max(st+4,e1+2)}else en=st+(+o.dur||3)}
   return[st,en]}
 function total(){let t=10;for(const c of S.clips)t=Math.max(t,ce(c));for(const o of S.orders)if(!o.clip)t=Math.max(t,orderSpan(o)[1]);return t}
-function speech(){const r=[];S.words.forEach((w,i)=>{const p=WT[i];if(!p)return;const l=r[r.length-1];if(l&&p[0]-l[1]<0.6)l[1]=Math.max(l[1],p[1]);else r.push([p[0],p[1]])});return r}
+/* ================= מנוע מיקס 1: תפקידים, פרמטרים, מעטפות ================= */
+const ROLE={voice:'voice',bg:'music',amb:'music',fx:'sfx',other:'sfx'};
+const ROLE_T={voice:'קריינות',music:'מוזיקה ואווירה',sfx:'אפקטים'};
+const roleOf=t=>ROLE[t?.kind]||'sfx';
+const MIX0=()=>({voiceLufs:-16,underDb:18,riseDb:7,holdSec:3.5,downSec:1.5,upSec:2.75,wet:0.2,masterLufs:-15,tp:-1,preSec:6,postSec:18,master:true});
+const mixP=()=>Object.assign(MIX0(),S.mix||{});
+const dB=x=>Math.pow(10,x/20),todB=g=>20*Math.log10(Math.max(g,1e-9));
 function audible(t){return S.tracks.some(x=>x.solo)?t.solo:!t.mute}
-function envAt(c,u,sp){const L=c.len;let f=c.gain;
-  if(c.fi>0&&u<c.fi)f*=clamp(u/c.fi,0,1);if(c.fo>0&&u>L-c.fo)f*=clamp((L-u)/c.fo,0,1);
+/* פייד אוטומטי: 10ms בכל קצה נגד קליקים; לאפקטים 250ms כניסה ודעיכה מעריכית עד 4 שניות */
+function effFades(c){const L=c.len,sfx=roleOf(trk(c.track))==='sfx';let fi=Math.max(c.fi||0,0.01),fo=Math.max(c.fo||0,0.01);
+  if(sfx){fi=Math.max(fi,0.25);fo=Math.max(fo,Math.min(4,L*0.7))}const k=fi+fo>L?L/(fi+fo):1;return{fi:fi*k,fo:fo*k,exp:sfx}}
+function envAt(c,u){const L=c.len,F=effFades(c);let f=c.gain;
+  if(u<F.fi)f*=clamp(u/F.fi,0,1);if(u>L-F.fo){const r=clamp((L-u)/F.fo,0,1);f*=F.exp?r*r*r:r}
   for(const o of c.ops){if(u<o.a||u>o.b)continue;const r=(u-o.a)/((o.b-o.a)||1);f*=o.k==='in'?r:o.k==='out'?1-r:o.k==='mute'?0:o.g}
-  if(sp&&sp.length){const tl=c.start+u,dl=0.4;let m=1;for(const[a,b]of sp){let q=1;if(tl<a-0.5||tl>b+1)q=1;else if(tl<a-0.1)q=1-(1-dl)*((tl-(a-0.5))/0.4);else if(tl<=b+0.2)q=dl;else q=dl+(1-dl)*((tl-(b+0.2))/0.8);m=Math.min(m,q)}f*=m}
   return Math.max(0,f)}
-function envKeys(c,sp){const L=c.len,T=new Set([0,L,c.fi,L-c.fo]);for(const o of c.ops){T.add(o.a);T.add(o.b);T.add(o.a+0.005);T.add(o.b-0.005);T.add(o.a-0.005);T.add(o.b+0.005)}
-  if(sp)for(const[a,b]of sp){for(const t of[a-0.5,a-0.1,b+0.2,b+1])T.add(t-c.start)}
-  return[...T].filter(u=>u>=0&&u<=L).sort((a,b)=>a-b)}
+function envKeys(c){const L=c.len,F=effFades(c),T=new Set([0,L,F.fi,L-F.fo]);for(const o of c.ops){for(const t of[o.a,o.b,o.a+0.005,o.b-0.005,o.a-0.005,o.b+0.005])T.add(t)}
+  if(F.exp)for(let i=1;i<16;i++)T.add(L-F.fo+F.fo*i/16);return[...T].filter(u=>u>=0&&u<=L).sort((a,b)=>a-b)}
+
+/* ================= מנוע מיקס 2: שרשראות עיבוד (Web Audio) ================= */
+function bq(c,type,f,q,g){const b=c.createBiquadFilter();b.type=type;b.frequency.value=f;if(q!=null)b.Q.value=q;if(g!=null)b.gain.value=g;return b}
+function makeIR(c,sec=2.8){const sr=c.sampleRate,n=Math.floor(sr*sec),b=c.createBuffer(2,n,sr);let seed=11;const rnd=()=>((seed=seed*16807%2147483647)/2147483647)*2-1;
+  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<n;i++){const t=i/sr;d[i]=rnd()*Math.exp(-t*2.3)*Math.min(1,t/0.012)*(1-0.4*Math.exp(-t*8))}}return b}
+/* opt.chain=false: ללא עיבוד (לניתוח ולאיחוד קריינות). opt.live: מגביל בטיחות בזמן ניגון */
+function buildGraph(c,cal,opt){const P=mixP(),G={},out=c.createGain();G.out=out;
+  if(opt.live){const k=c.createDynamicsCompressor();k.threshold.value=-1;k.knee.value=0;k.ratio.value=20;k.attack.value=.002;k.release.value=.2;out.connect(k);k.connect(c.destination)}else out.connect(c.destination);
+  const raw=!opt.chain;
+  const v=c.createGain();v.gain.value=raw?1:(cal?.voiceGain??1);G.voice=v;
+  if(raw)v.connect(out);else{const h1=bq(c,'highpass',80,0.5412),h2=bq(c,'highpass',80,1.3066),cp=c.createDynamicsCompressor();cp.threshold.value=cal?.thr??-24;cp.ratio.value=2.5;cp.attack.value=0.025;cp.release.value=0.25;cp.knee.value=6;
+    const pk=bq(c,'peaking',3200,1.2,2),de=bq(c,'peaking',7000,2.5,-2.5);v.connect(h1);h1.connect(h2);h2.connect(cp);cp.connect(pk);pk.connect(de);de.connect(out)}
+  const m=c.createGain();m.gain.value=raw?1:(cal?.musicGain??dB(-20));G.music=m;const dk=c.createGain();G.duck=dk;
+  if(raw)m.connect(out);else{const cv=bq(c,'peaking',2500,1.2,-3.5);m.connect(cv);cv.connect(dk);dk.connect(out)}
+  const s=c.createGain();G.sfx=s;s.connect(out);if(!raw&&P.wet>0){const send=c.createGain();send.gain.value=P.wet;const cv=c.createConvolver();cv.buffer=makeIR(c);s.connect(send);send.connect(cv);cv.connect(out)}
+  return G}
+/* Ducking חכם עם היסטרזיס: נשאר מונמך בין משפטים; עולה רק בשתיקה ארוכה מ-holdSec; פתיחה וסיום */
+function duckPlan(cal){const P=mixP(),sp=cal?.speech||[],open=dB(P.riseDb);if(!sp.length)return[[0,open]];
+  const vs=sp[0][0],ve=sp[sp.length-1][1],a0=Math.max(0,vs-P.preSec),pts=[[0,0],[a0,0],[Math.max(a0+0.05,vs-P.downSec),open],[vs,1]];
+  for(let i=0;i<sp.length-1;i++){const e=sp[i][1],n=sp[i+1][0],gap=n-e;if(gap<P.holdSec)continue;const up=Math.min(P.upSec,gap-0.6-P.downSec);if(up<0.3)continue;pts.push([e+0.6,1],[e+0.6+up,open],[n-P.downSec,open],[n,1])}
+  pts.push([ve+0.6,1],[ve+0.6+P.upSec,open],[ve+Math.max(P.upSec+1,P.postSec*0.3),open],[ve+P.postSec,0]);return pts}
+function curveAt(pts,t){if(t<=pts[0][0])return pts[0][1];for(let i=1;i<pts.length;i++)if(t<=pts[i][0]){const[a,va]=pts[i-1],[b,vb]=pts[i];return va+(vb-va)*((t-a)/((b-a)||1))}return pts[pts.length-1][1]}
+function sched(c,G,when,from,opt){recalc();const N=[],at=t=>when+Math.max(0,t-from),TG={};
+  for(const T of S.tracks){if(!audible(T))continue;const r=roleOf(T);if(opt.roles&&!opt.roles.includes(r))continue;if(opt.tids&&!opt.tids.includes(T.id))continue;const g=c.createGain();g.gain.value=+T.vol;g.connect(G[r]);TG[T.id]=g}
+  for(const cl of S.clips){const tg=TG[cl.track];if(!tg)continue;const s=SRC[cl.src];if(!s)continue;const b=s.buf;const st=cl.start,en=ce(cl);if(en<=from)continue;const skip=Math.max(0,from-st);
+    const src=c.createBufferSource();src.buffer=b;const g=c.createGain();src.connect(g);g.connect(tg);
+    g.gain.setValueAtTime(envAt(cl,skip),at(st+skip));for(const u of envKeys(cl))if(u>skip)g.gain.linearRampToValueAtTime(envAt(cl,u),at(st+u));
+    if(cl.loop){src.loop=true;src.loopStart=0;src.loopEnd=b.duration;src.start(at(st),(cl.in+skip)%b.duration);src.stop(at(en))}
+    else{const off=cl.in+skip;if(off>=b.duration)continue;src.start(at(st),off,Math.min(cl.len-skip,b.duration-off))}N.push(src)}
+  if(opt.chain&&!opt.noDuck&&G.duck){const pl=duckPlan(opt.cal);G.duck.gain.setValueAtTime(curveAt(pl,from),at(from));for(const[t,v]of pl)if(t>from)G.duck.gain.linearRampToValueAtTime(v,at(t))}
+  return N}
+
+/* ================= מנוע מיקס 3: ניתוח (שתיקות, LUFS, True Peak) ================= */
+async function renderPart(opt,sr=22050,ch=2){recalc();const T=total(),c=new OfflineAudioContext(ch,Math.ceil(T*sr)+sr,sr);const G=buildGraph(c,opt.cal,{chain:opt.chain});sched(c,G,0,0,opt);return c.startRendering()}
+function frames(buf,win=0.02){const d=buf.getChannelData(0),sr=buf.sampleRate,F=Math.floor(sr*win),n=Math.floor(d.length/F),E=new Float32Array(n);
+  for(let i=0;i<n;i++){let s=0;for(let j=i*F;j<(i+1)*F;j++)s+=d[j]*d[j];E[i]=todB(Math.sqrt(s/F))}return E}
+const pct=(a,q)=>{const s=[...a].filter(isFinite).sort((x,y)=>x-y);return s.length?s[Math.min(s.length-1,Math.floor(q*s.length))]:-120};
+function detectSpeech(buf){const E=frames(buf,0.02),floor=pct(E,0.1),peak=pct(E,0.95),thr=Math.max(floor+10,peak-35),R=[];let a=-1;
+  for(let i=0;i<=E.length;i++){const on=i<E.length&&E[i]>thr;if(on&&a<0)a=i;if(!on&&a>=0){R.push([a*0.02,i*0.02]);a=-1}}
+  const M=[];for(const r of R){const l=M[M.length-1];if(l&&r[0]-l[1]<0.3)l[1]=r[1];else M.push([...r])}return{regions:M.filter(r=>r[1]-r[0]>=0.12),floor,peak,thr}}
+async function lufs(buf){const c=new OfflineAudioContext(buf.numberOfChannels,buf.length,buf.sampleRate),s=c.createBufferSource();s.buffer=buf;
+  const f1=bq(c,'highshelf',1681.97,null,4),f2=bq(c,'highpass',38.13,0.5003);s.connect(f1);f1.connect(f2);f2.connect(c.destination);s.start();const k=await c.startRendering();
+  const H=Math.floor(k.sampleRate*0.1),nh=Math.floor(k.length/H),hp=new Float64Array(nh);
+  for(let ch=0;ch<k.numberOfChannels;ch++){const d=k.getChannelData(ch);for(let h=0;h<nh;h++){let s2=0;for(let i=h*H;i<(h+1)*H;i++)s2+=d[i]*d[i];hp[h]+=s2/H}}
+  const L=ms=>-0.691+10*Math.log10(ms||1e-12),bl=[];for(let h=0;h+3<nh;h++){const ms=(hp[h]+hp[h+1]+hp[h+2]+hp[h+3])/4;if(L(ms)>-70)bl.push(ms)}if(!bl.length)return -Infinity;
+  const g2=L(bl.reduce((a,b)=>a+b,0)/bl.length)-10,b2=bl.filter(ms=>L(ms)>g2);return L(b2.reduce((a,b)=>a+b,0)/b2.length)}
+function ipk(d,i){const y1=d[i],y0=i>0?d[i-1]:y1,y2=i+1<d.length?d[i+1]:y1,y3=i+2<d.length?d[i+2]:y2;let m=Math.abs(y1);
+  const a=-0.5*y0+1.5*y1-1.5*y2+0.5*y3,b=y0-2.5*y1+2*y2-0.5*y3,c=-0.5*y0+0.5*y2;for(const t of[0.25,0.5,0.75]){const v=Math.abs(((a*t+b)*t+c)*t+y1);if(v>m)m=v}return m}
+function truePeak(buf){let m=0;for(let ch=0;ch<buf.numberOfChannels;ch++){const d=buf.getChannelData(ch);for(let i=0;i<d.length;i++){const v=Math.abs(d[i]);if(v*1.5>m){const p=ipk(d,i);if(p>m)m=p}}}return todB(m)}
+/* לימיטר True Peak עם Lookahead של 5ms */
+function limitTP(buf,ceilDb){const ceil=dB(ceilDb),sr=buf.sampleRate,n=buf.length,LA=Math.max(1,Math.floor(sr*0.005)),C=[...Array(buf.numberOfChannels)].map((_,i)=>buf.getChannelData(i));
+  const req=new Float32Array(n);let hits=0;for(let i=0;i<n;i++){let p=0;for(const d of C){const v=Math.abs(d[i]);if(v*1.5>ceil){const q=ipk(d,i);if(q>p)p=q}}if(p>ceil){req[i]=ceil/p;hits++}else req[i]=1}
+  if(!hits)return{hits:0,maxGr:0};const g=new Float32Array(n),dq=new Int32Array(n);let h=0,t=0;
+  for(let i=n-1;i>=0;i--){while(t>h&&req[dq[t-1]]>=req[i])t--;dq[t++]=i;while(dq[h]>i+LA)h++;g[i]=req[dq[h]]}
+  const rel=Math.exp(-1/(sr*0.12)),att=Math.exp(-1/(sr*0.002));let x=1;for(let i=0;i<n;i++){x=Math.min(g[i],1-(1-x)*rel);g[i]=x}
+  for(let i=n-2;i>=0;i--)g[i]=Math.min(g[i],1-(1-g[i+1])*att);let mg=1;for(const d of C)for(let i=0;i<n;i++){d[i]=clamp(d[i]*g[i],-ceil,ceil)}for(let i=0;i<n;i++)if(g[i]<mg)mg=g[i];
+  return{hits,maxGr:-todB(mg)}}
+
+/* ================= מנוע מיקס 4: כיול ודוח ================= */
+let CAL=null,calDirty=true,calP=null,MLOG=null;
+function markDirty(){calDirty=true}
+function ensureCal(){if(!calDirty&&CAL)return Promise.resolve(CAL);if(!calP)calP=calibrate().finally(()=>{calP=null});return calP}
+async function calibrate(){const P=mixP(),t0=performance.now(),log={time:new Date().toLocaleTimeString('he-IL')},cal={thr:-24,voiceGain:1,musicGain:dB(-20),speech:[],log};
+  recalc();const has=r=>S.clips.some(c=>SRC[c.src]&&audible(trk(c.track))&&roleOf(trk(c.track))===r);
+  if(has('voice')){const raw=await renderPart({roles:['voice'],chain:false});const sd=detectSpeech(raw);cal.speech=sd.regions;
+    const E=frames(raw,0.05).filter(x=>x>sd.thr);cal.thr=clamp(pct(E,0.9),-50,-6);
+    log.voiceRaw=await lufs(raw);const proc=await renderPart({roles:['voice'],chain:true,cal:{...cal,voiceGain:1}});const Lp=await lufs(proc);
+    cal.voiceGain=isFinite(Lp)?clamp(dB(P.voiceLufs-Lp),dB(-24),dB(30)):1;log.voiceProc=Lp;log.voiceTarget=P.voiceLufs;log.voiceGainDb=todB(cal.voiceGain);log.thr=cal.thr;
+    log.noiseFloor=sd.floor;log.speechThr=sd.thr}
+  if(has('music')){const mus=await renderPart({roles:['music'],chain:true,noDuck:true,cal:{...cal,musicGain:1}});const Lm=await lufs(mus);log.musicRaw=Lm;
+    const target=P.voiceLufs-P.underDb;cal.musicGain=isFinite(Lm)?clamp(dB(target-Lm),dB(-40),dB(20)):dB(-20);log.musicGainDb=todB(cal.musicGain);log.musicDucked=target;log.musicOpen=target+P.riseDb}
+  const sp=cal.speech;log.speechCount=sp.length;log.voiceStart=sp[0]?.[0];log.voiceEnd=sp[sp.length-1]?.[1];
+  log.silences=[];for(let i=0;i<sp.length-1;i++){const g=sp[i+1][0]-sp[i][1];if(g>=P.holdSec)log.silences.push([sp[i][1],sp[i+1][0]])}
+  const fx=S.clips.filter(c=>SRC[c.src]&&roleOf(trk(c.track))==='sfx').sort((a,b)=>a.start-b.start);
+  log.sfx=fx.map(c=>{let near=null;for(const p of WT){if(!p)continue;const d=c.start-p[0];if(Math.abs(d)<Math.abs(near??99))near=d}
+    const ov=fx.filter(o=>o!==c&&o.start<ce(c)-effFades(c).fo&&c.start<ce(o)-effFades(o).fo).length;return{label:c.label,t:c.start,len:c.len,near,ov}});
+  log.ms=Math.round(performance.now()-t0);cal.log=log;CAL=cal;calDirty=false;MLOG={...MLOG,cal:log};console.groupCollapsed('[מיקס] כיול');console.table(log.sfx);console.log(log);console.groupEnd();return cal}
 
 /* ================= אודיו: ניגון וייצוא ================= */
-function chain(c){const m=c.createGain();const k=c.createDynamicsCompressor();k.threshold.value=-2;k.knee.value=0;k.ratio.value=20;k.attack.value=.003;k.release.value=.25;m.connect(k);k.connect(c.destination);return m}
-function sched(c,out,when,from,only){recalc();const N=[],at=t=>when+Math.max(0,t-from),SP=speech();
-  for(const cl of S.clips){const T=trk(cl.track);if(!T||!audible(T))continue;if(only&&!only.includes(T.id))continue;const s=SRC[cl.src];if(!s)continue;const b=s.buf;
-    const st=cl.start,en=ce(cl);if(en<=from)continue;const skip=Math.max(0,from-st);
-    const src=c.createBufferSource();src.buffer=b;const g=c.createGain();src.connect(g);g.connect(out);
-    const sp=T.duck?SP:null,keys=envKeys(cl,sp),tv=+T.vol;
-    g.gain.setValueAtTime(envAt(cl,skip,sp)*tv,at(st+skip));for(const u of keys)if(u>skip)g.gain.linearRampToValueAtTime(envAt(cl,u,sp)*tv,at(st+u));
-    if(cl.loop){src.loop=true;src.loopStart=0;src.loopEnd=b.duration;src.start(at(st),(cl.in+skip)%b.duration);src.stop(at(en))}
-    else{const off=cl.in+skip;if(off>=b.duration)continue;src.start(at(st),off,Math.min(cl.len-skip,b.duration-off))}
-    N.push(src)}
-  return N}
 let playing=null;
 function pos(){return playing?playing.from+Math.max(0,ac().currentTime-playing.when):cur}
 function play(){if(playing){stop();return}const c=ac();c.resume();if(cur>=total()-0.05&&!rec)cur=0;
-  const when=c.currentTime+.05,out=chain(c);out.gain.value=1;playing={nodes:sched(c,out,when,cur,rec?S.tracks.filter(t=>t.id!==rec.track).map(t=>t.id):null),when,from:cur,out};updPlay();requestAnimationFrame(tick)}
+  const when=c.currentTime+.05,G=buildGraph(c,CAL,{chain:true,live:true});playing={nodes:sched(c,G,when,cur,{chain:true,cal:CAL,tids:rec?S.tracks.filter(t=>t.id!==rec.track).map(t=>t.id):null}),when,from:cur,out:G.out};updPlay();requestAnimationFrame(tick);
+  if(calDirty&&!rec)ensureCal().then(()=>{if(playing&&!rec)live()}).catch(e=>console.warn(e))}
 function stop(){if(rec){rec.mr.stop();return}if(!playing)return;cur=pos();playing.nodes.forEach(n=>{try{n.stop()}catch(e){}});try{playing.out.disconnect()}catch(e){}playing=null;updPlay();placePH()}
 function updPlay(){const b=$('#play');b.classList.toggle('on',!!playing);b.innerHTML=playing?'<svg class="i"><use href="#i-stop"/></svg><span>עצירה</span>':'<svg class="i"><use href="#i-play"/></svg><span>נגינה</span>'}
 let liveT;function live(){clearTimeout(liveT);liveT=setTimeout(()=>{if(playing&&!rec){const p=pos();stop();cur=p;play()}},150)}
 function seekTo(t){const was=!!playing&&!rec;if(was)stop();cur=Math.max(0,t);placePH();hiNow(cur);if(was)play()}
 function tick(){if(!playing)return;const p=pos();if(!rec&&p>=total()+0.1){stop();cur=0;placePH();return}
   placePH(p);hiNow(p);if(rec)drawRec(p);const x=X(p),w=sc.clientWidth;if(x<sc.scrollLeft+40||x>sc.scrollLeft+w)sc.scrollLeft=x-w+80;requestAnimationFrame(tick)}
-async function renderMix(only){recalc();const T=total(),sr=44100;const c=new OfflineAudioContext(2,Math.ceil(T*sr)+sr,sr);sched(c,chain(c),0,0,only);let b=await c.startRendering();
-  let end=b.length;const L=b.getChannelData(0),R=b.getChannelData(1);while(end>sr&&Math.abs(L[end-1])<1e-4&&Math.abs(R[end-1])<1e-4)end--;end=Math.min(b.length,end+Math.floor(sr*0.5));
-  if(end<b.length){const nb=new AudioBuffer({length:end,sampleRate:sr,numberOfChannels:2});nb.copyToChannel(L.subarray(0,end),0);nb.copyToChannel(R.subarray(0,end),1);b=nb}
-  if($('#nrm').checked&&!only){let pk=0;for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}}
-    if(pk>0){const g=Math.min(4,0.89/pk);for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]*=g}}}
-  return b}
+async function renderTracksRaw(tids){const b=await renderPart({tids,chain:false},44100,1);return trimTail(b)}
+function trimTail(b){const sr=b.sampleRate,C=[...Array(b.numberOfChannels)].map((_,i)=>b.getChannelData(i));let end=b.length;while(end>sr&&C.every(d=>Math.abs(d[end-1])<1e-4))end--;end=Math.min(b.length,end+Math.floor(sr*0.5));
+  if(end>=b.length)return b;const nb=new AudioBuffer({length:end,sampleRate:sr,numberOfChannels:b.numberOfChannels});C.forEach((d,i)=>nb.copyToChannel(d.subarray(0,end),i));return nb}
+async function renderMix(){const cal=await ensureCal(),P=mixP(),t0=performance.now();let b=trimTail(await renderPart({chain:true,cal},44100,2));const ml={};
+  ml.before=await lufs(b);ml.tpBefore=truePeak(b);
+  if(P.master&&isFinite(ml.before)){const g=dB(P.masterLufs-ml.before);for(let ch=0;ch<b.numberOfChannels;ch++){const d=b.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]*=g}ml.gainDb=todB(g);const lm=limitTP(b,P.tp);ml.limHits=lm.hits;ml.maxGr=lm.maxGr}
+  else{const lm=limitTP(b,P.tp);ml.limHits=lm.hits;ml.maxGr=lm.maxGr}
+  ml.after=await lufs(b);ml.tpAfter=truePeak(b);ml.dur=b.duration;ml.ms=Math.round(performance.now()-t0);MLOG={...MLOG,master:ml};console.log('[מיקס] מאסטר',ml);return b}
 function toWav(b,ch=2){const n=b.length,sr=b.sampleRate,buf=new ArrayBuffer(44+n*ch*2),v=new DataView(buf);const w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
   w(0,'RIFF');v.setUint32(4,36+n*ch*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);v.setUint32(24,sr,true);v.setUint32(28,sr*ch*2,true);v.setUint16(32,ch*2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*ch*2,true);
   const C=[...Array(ch)].map((_,i)=>b.getChannelData(Math.min(i,b.numberOfChannels-1)));let o=44;for(let i=0;i<n;i++)for(const d of C){const s=clamp(d[i],-1,1);v.setInt16(o,s<0?s*0x8000:s*0x7fff,true);o+=2}
@@ -453,7 +540,7 @@ function doCopy(){if(!sel||sel.b-sel.a<0.02){toast('מסמנים קטע להעת
   clipboard=items;toast(`הועתקו ${items.length} קליפים`)}
 function doPaste(){if(!clipboard||!clipboard.length){toast('אין מה להדביק');return}pushUndo();for(const it of clipboard){const c={...JSON.parse(JSON.stringify(it.clip)),id:uid(),track:trk(it.track)?it.track:S.selTrack,start:cur+it.rel};S.clips.push(c)}afterEdit()}
 function insertSilence(t,secs){const tids=S.tracks.filter(x=>x.kind==='voice').map(x=>x.id);pushUndo();splitAt(t,tids);for(const c of S.clips)if(tids.includes(c.track)&&c.aw==null&&!c.full&&c.start>=t-1e-3)c.start+=secs;afterEdit()}
-function afterEdit(){save();renderAll();live()}
+function afterEdit(){markDirty();save();renderAll();live()}
 
 /* ================= הקלטה ================= */
 let rec=null;
@@ -475,7 +562,7 @@ function drawRec(p){let el=$('#recl');const r=rowOf(rec.track);if(!r)return;if(!
 async function importFiles(files,at,tid){files=[...files].filter(f=>f.type.startsWith('audio')||f.type.startsWith('video')||/\.(mp3|wav|m4a|ogg|aac|webm|flac)$/i.test(f.name));if(!files.length)return;
   setStat('טוען…');pushUndo();let t=at??cur;
   for(const f of files){try{const id=await addSource(f,f.name);const empty=!S.clips.some(c=>SRC[c.src]);
-      const track=empty?'voice':(tid||S.selTrack||'voice');S.clips.push(newClip({track:trk(track)?track:S.tracks[0].id,src:id,start:empty?0:t,len:SRC[id].buf.duration,label:f.name.replace(/\.[^.]+$/,'')}));
+      const track=empty?'voice':(tid||S.selTrack||'voice');S.clips.push(newClip({track:trk(track)?track:S.tracks[0].id,src:id,start:empty?mixP().preSec:t,len:SRC[id].buf.duration,label:f.name.replace(/\.[^.]+$/,'')}));
       if(empty){S.narSrc=id;if(S.name==='מדיטציה חדשה')S.name=f.name.replace(/\.[^.]+$/,'')}t+=SRC[id].buf.duration}
     catch(e){toast('לא הצלחתי לקרוא את '+f.name)}}
   afterEdit();fitZoom()}
@@ -499,7 +586,7 @@ function renderHeads(){$('#heads').innerHTML=`<div class="hd rul" style="top:0;h
   return`<div class="hd${t.id===S.selTrack?' on':''}" data-t="${t.id}" style="top:${r.y}px;height:${r.h}px;--c:${KIND_C[t.kind]}">
    <div class="r1"><input type="text" value="${esc(t.name)}" data-k="name" aria-label="שם השכבה"><button class="ms m${t.mute?' on':''}" data-a="mute" title="השתקה">M</button><button class="ms s${t.solo?' on':''}" data-a="solo" title="סולו">S</button><button class="x" data-a="del" title="מחיקת השכבה">✕</button></div>
    <div class="r2">עוצמה<input type="range" min="0" max="1.5" step="0.05" value="${t.vol}" data-k="vol"></div>
-   ${t.kind!=='voice'?`<label class="ck r2"><input type="checkbox" data-k="duck"${t.duck?' checked':''}> יורד כשמדברים</label>`:''}</div>`}).join('')}
+   <div class="r2">סוג<select data-k="kind" style="flex:1;padding:1px 4px;font-size:12px">${[['voice','קריינות'],['bg','רקע / מוזיקה'],['amb','אווירה'],['fx','אפקטים']].map(([k,n])=>`<option value="${k}"${(t.kind==='other'?'fx':t.kind)===k?' selected':''}>${n}</option>`).join('')}</select></div></div>`}).join('')}
 function renderOverlay(){const pps=S.pps;let h='';
   for(const r of ROWS){if(r.txt){
       S.sentences.forEach((s,i)=>{const a=WT[s.a],b=WT[s.b];if(!a||!b)return;h+=`<div class="sen" data-s="${i}" style="left:${X(b[1])}px;width:${Math.max(10,(b[1]-a[0])*pps)}px;top:${r.y+3}px" title="${esc(sText(s))}">${esc(sText(s))}</div>`});
@@ -520,17 +607,17 @@ function drawWave(){const cv=$('#cv'),dpr=devicePixelRatio||1,w=sc.clientWidth,H
   g.fillStyle='#2d2939';g.fillRect(0,RUL-1,w,1);
   const colors={voice:'#9c8cf0',bg:'#4cc3b7',amb:'#6fa8f0',fx:'#f0965f',other:'#e07aa8'};
   for(const c of S.clips){const s=SRC[c.src];if(!s||c._y==null)continue;const xr=X(c.start),xl=X(ce(c));
-    const a=Math.max(xl,x0),b=Math.min(xr,x0+w);if(b<=a)continue;const T=trk(c.track),sp=T?.duck?speech():null;
+    const a=Math.max(xl,x0),b=Math.min(xr,x0+w);if(b<=a)continue;const T=trk(c.track);
     const top=c._y+17,hh=c._h-17,mid=top+hh/2,{mn,mx,PR}=s.peaks,dur=s.buf.duration,raw=pps>PR,d=raw?s.buf.getChannelData(0):null,sr=s.buf.sampleRate;
     g.fillStyle=colors[T?.kind]||'#aaa';g.globalAlpha=audible(T)?.9:.35;
     for(let px=Math.floor(a);px<b;px++){const tB=TX(px)-c.start,tA=TX(px+1)-c.start;if(tB<0||tA>c.len)continue;let sA=c.in+Math.max(0,tA),sB=c.in+Math.min(c.len,tB);
       if(c.loop){sA%=dur;sB=sA+(tB-tA)}if(sA>=dur)continue;let lo=0,hi=0;
       if(raw){const i0=Math.floor(sA*sr),i1=Math.min(d.length,Math.ceil(sB*sr));for(let i=i0;i<i1;i++){const v=d[i];if(v<lo)lo=v;if(v>hi)hi=v}}
       else{const i0=Math.floor(sA*PR),i1=Math.min(mn.length,Math.max(i0+1,Math.ceil(sB*PR)));for(let i=i0;i<i1;i++){if(mn[i]<lo)lo=mn[i];if(mx[i]>hi)hi=mx[i]}}
-      const e=envAt(c,clamp((tA+tB)/2,0,c.len),null);const y1=mid-hi*e*hh*0.5,y2=mid-lo*e*hh*0.5;g.fillRect(px-x0,y1,1,Math.max(1,y2-y1))}
+      const e=envAt(c,clamp((tA+tB)/2,0,c.len));const y1=mid-hi*e*hh*0.5,y2=mid-lo*e*hh*0.5;g.fillRect(px-x0,y1,1,Math.max(1,y2-y1))}
     g.globalAlpha=1;
-    if(c.fi||c.fo||c.ops.length||c.gain!==1){g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=1.2;g.beginPath();const keys=envKeys(c,null);let first=true;
-      for(const u of keys){const x=X(c.start+u)-x0,y=top+hh-hh*clamp(envAt(c,u,null)/1.5,0,1)*1;if(first){g.moveTo(x,y);first=false}else g.lineTo(x,y)}g.stroke()}}}
+    {g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=1.2;g.beginPath();const keys=envKeys(c);let first=true;
+      for(const u of keys){const x=X(c.start+u)-x0,y=top+hh-hh*clamp(envAt(c,u)/1.5,0,1);if(first){g.moveTo(x,y);first=false}else g.lineTo(x,y)}g.stroke()}}}
 function placePH(p){$('#ph').style.left=X(p??cur)+'px';$('#time').textContent=fmt(p??pos())}
 
 /* ================= ציר הזמן: עכבר ================= */
@@ -560,7 +647,7 @@ inner.addEventListener('pointerdown',ev=>{if(ev.button!==0)return;const r0=inner
     ()=>{if(!moved){sel=null;selClip=c?c.id:null;S.selTrack=r.t.id;seekTo(Math.max(0,t0));layoutTL(true)}else{cur=sel.a;placePH();renderSelInfo()}})});
 function renderSelInfo(){if(sel)setStat(`נבחר ${fmt(sel.b-sel.a)} ש׳`)}
 $('#heads').addEventListener('input',ev=>{const hd=ev.target.closest('.hd');if(!hd||!hd.dataset.t)return;const t=trk(hd.dataset.t),k=ev.target.dataset.k;
-  if(k==='name')t.name=ev.target.value;else if(k==='vol')t.vol=+ev.target.value;else if(k==='duck')t.duck=ev.target.checked;save();live();if(k==='duck'||k==='vol')drawWave()});
+  if(k==='name')t.name=ev.target.value;else if(k==='vol')t.vol=+ev.target.value;else if(k==='kind'){t.kind=ev.target.value;markDirty();save();layoutTL(true);live();return}save();live();if(k==='vol'){markDirty();drawWave()}});
 $('#heads').addEventListener('change',ev=>{if(ev.target.dataset.k==='name'){renderOrders();renderFxTrackSel()}});
 $('#heads').addEventListener('click',async ev=>{if(ev.target.id==='addTrack'){pushUndo();const id=uid();S.tracks.push({id,name:'שכבה '+(S.tracks.length+1),kind:'other',vol:1,mute:false,solo:false,duck:false});S.selTrack=id;afterEdit();return}
   const hd=ev.target.closest('.hd');if(!hd||!hd.dataset.t)return;const t=trk(hd.dataset.t),a=ev.target.dataset.a;
@@ -606,7 +693,7 @@ function refineSegments(segs,buf){const{E,thr,fr}=energy(buf),n=E.length,V=i=>i>
 function parseTime(v){if(typeof v==='number')return v;v=String(v).trim().replace(',','.');const m=v.match(/^(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)$/);if(m)return(+(m[1]||0))*3600+(+m[2])*60+(+m[3]);const m2=v.match(/^(\d+(?:\.\d+)?)s?$/);return m2?+m2[1]:NaN}
 async function narrationSource(){const vt=S.tracks.filter(t=>t.kind==='voice').map(t=>t.id);const vc=S.clips.filter(c=>vt.includes(c.track)&&SRC[c.src]);if(!vc.length)return null;
   const ids=[...new Set(vc.map(c=>c.src))];if(ids.length===1&&!vc.some(c=>c.ops.length||c.fi||c.fo)){S.narSrc=ids[0];return ids[0]}
-  trStat('מאחד את שכבת הקריינות לקובץ אחד…');const b=await renderMix(vt);const blob=toWav(b,1);pushUndo();const id=await addSource(blob,'קריינות מאוחדת');
+  trStat('מאחד את שכבת הקריינות לקובץ אחד…');const b=await renderTracksRaw(vt);const blob=toWav(b,1);pushUndo();const id=await addSource(blob,'קריינות מאוחדת');
   S.clips=S.clips.filter(c=>!vt.includes(c.track));S.clips.push(newClip({track:vt[0],src:id,start:0,len:b.duration,label:'קריינות'}));S.narSrc=id;return id}
 function detachFromWords(){recalc();for(const c of S.clips)if(c.aw!=null){c.aw=null;c.ao=0}S.orders=S.orders.filter(o=>o.clip||o.type==='background');S.orders.forEach(o=>{if(o.w0!=null){o.at=WT[o.w0]?.[0]??o.at??0;o.w0=o.w1=null}})}
 async function transcribe(){if(!gkey()){toast('צריך מפתח API של Gemini');openSettings();return}
@@ -744,7 +831,10 @@ function placeOrderFile(o,id){recalc();const buf=SRC[id].buf,[st,en]=orderSpan(o
   let c=o.clip&&S.clips.find(x=>x.id===o.clip);
   if(c){c.src=id;c.in=0;if(!a)c.len=buf.duration;c.label=o.label}
   else{c=newClip({track:o.track,src:id,start:st,len:a?en-st:buf.duration,loop:a,gain:o.type==='background'?0.35:a?0.5:0.8,fi:a?3:0,fo:a?4:0.4,label:o.label,order:o.id,full:o.type==='background'});
-    if(o.w0!=null&&WT[o.w0]){c.aw=o.w0;c.ao=0}S.clips.push(c);o.clip=c.id}}
+    if(o.w0!=null&&WT[o.w0]){c.aw=o.w0;c.ao=0;
+      if(!a){const gap=WT[o.w0][0]-(o.w0>0&&WT[o.w0-1]?WT[o.w0-1][1]:WT[o.w0][0]-1);c.ao=-Math.min(0.35,Math.max(0.15,gap*0.7))}}
+    if(!a){recalc();if(c.aw!=null)c.start=WT[c.aw][0]+c.ao;for(let k=0;k<4;k++){const hit=S.clips.find(x=>x!==c&&SRC[x.src]&&roleOf(trk(x.track))==='sfx'&&x.start<c.start+1.2&&c.start<ce(x)-effFades(x).fo);if(!hit)break;setStart(c,Math.max(c.start,hit.start)+1.5);c.note='הוזז 1.5 ש׳ כדי לא לחפוף אפקט אחר'}}
+    S.clips.push(c);o.clip=c.id}}
 async function orderFile(o,f){try{const id=await addSource(f,f.name);pushUndo();placeOrderFile(o,id);afterEdit();toast(`אפקט ${o.n} נכנס לציר`)}catch(e){toast('לא הצלחתי לקרוא את הקובץ')}}
 function orderCard(o){const[st,en]=orderSpan(o),g=gen(o),T=trk(o.track),done=!!o.clip&&S.clips.some(c=>c.id===o.clip),q=ctxWords(o);
   return`<article class="oc${hl===o.id?' hl':''}" data-id="${o.id}" style="--c:${KIND_C[T?.kind||'fx']}">
@@ -853,6 +943,30 @@ $('#vgo').onclick=async()=>{const st=$('#vst'),bt=$('#vgo');bt.disabled=true;sto
       if(t%10===0)st.textContent=`יוצר וידאו… ${Math.round(t/T*100)}%`}
     await out.finalize();dl(new Blob([out.target.buffer],{type:fmtx==='mp4'?'video/mp4':'video/webm'}),safe(S.name)+'.'+fmtx);st.textContent=`הווידאו ירד (${fmtx.toUpperCase()}). אפשר להעלות אותו ישר ליוטיוב.`}
   catch(e){st.textContent='יצירת הווידאו נכשלה: '+e.message}finally{bt.disabled=false}};
+
+/* ================= דוח מיקס ================= */
+const MSET=[['voiceLufs','קריינות (LUFS)',1],['underDb','מוזיקה מתחת לקול בזמן דיבור (dB)',1],['riseDb','עליית מוזיקה בשתיקה (dB)',1],['holdSec','שתיקה לפני עלייה (ש׳)',0.1],['downSec','זמן ירידה לפני דיבור (ש׳)',0.1],['upSec','זמן עלייה בשתיקה (ש׳)',0.1],['wet','Reverb לאפקטים (0–1)',0.05],['preSec','מוזיקה לבד בפתיחה (ש׳)',1],['postSec','מוזיקה לבד בסיום (ש׳)',1],['masterLufs','מאסטר (LUFS)',0.5],['tp','תקרת True Peak (dBTP)',0.1]];
+const f1=v=>v==null||!isFinite(v)?'—':(Math.round(v*10)/10).toString();
+function renderMixRep(){const P=mixP(),L=MLOG?.cal,M=MLOG?.master;let h='';
+  if(!L){$('#mixrep').innerHTML='<p class="mut">עוד לא בוצע ניתוח. לוחצים "ניתוח מחדש".</p>';}
+  else{h+=`<h4>קריינות</h4><table class="mt"><tr><td>עוצמה לפני עיבוד</td><td class="nv">${f1(L.voiceRaw)} LUFS</td></tr><tr><td>אחרי HPF 80Hz, קומפרסור 2.5:1, EQ 3.2kHz, De-ess</td><td class="nv">${f1(L.voiceProc)} LUFS</td></tr>
+     <tr><td>הגברה לכיול</td><td class="nv">${f1(L.voiceGainDb)} dB → ${f1(L.voiceTarget)} LUFS</td></tr><tr><td>סף הקומפרסור (אחוזון 90 של הדיבור)</td><td class="nv">${f1(L.thr)} dBFS</td></tr>
+     <tr><td>רצפת רעש / סף זיהוי דיבור</td><td class="nv">${f1(L.noiseFloor)} / ${f1(L.speechThr)} dBFS</td></tr></table>
+    <h4>מוזיקה ואווירה</h4><table class="mt"><tr><td>עוצמה מקורית (אחרי EQ Carving 2.5kHz −3.5dB)</td><td class="nv">${f1(L.musicRaw)} LUFS</td></tr><tr><td>בזמן דיבור / בשתיקה ארוכה</td><td class="nv">${f1(L.musicDucked)} / ${f1(L.musicOpen)} LUFS</td></tr></table>
+    <h4>תזמונים</h4><table class="mt"><tr><td>קטעי דיבור שזוהו</td><td class="nv">${L.speechCount}</td></tr><tr><td>תחילת קריינות / סיום</td><td class="nv">${f1(L.voiceStart)} / ${f1(L.voiceEnd)} ש׳</td></tr>
+     ${L.voiceStart!=null&&L.voiceStart<P.preSec-0.3?`<tr><td class="wn">פתיחה</td><td class="wn">הקריינות מתחילה לפני ${P.preSec} ש׳, אז המוזיקה לא מספיקה להיכנס לבד. אפשר ללחוץ "הזזת הקריינות".</td></tr>`:''}
+     <tr><td>שתיקות ארוכות (המוזיקה עולה)</td><td class="nv">${L.silences.length?L.silences.map(([a,b])=>`${fmt0(a)}–${fmt0(b)}`).join(' · '):'אין'}</td></tr></table>
+    <h4>אפקטים</h4>${L.sfx.length?`<table class="mt">${L.sfx.map(x=>`<tr><td>${esc(x.label||'אפקט')}</td><td class="nv">${fmt(x.t)} · ${f1(x.len)} ש׳${x.near!=null?` · ${x.near<0?f1(-x.near)+' ש׳ לפני':f1(x.near)+' ש׳ אחרי'} מילה`:''}${x.ov?` <span class="wn">· חופף ל-${x.ov} אפקטים</span>`:''}${x.near!=null&&Math.abs(x.near)<0.08?' <span class="wn">· נכנס בדיוק על מילה</span>':''}</td></tr>`).join('')}</table>`:'<p class="mut">אין אפקטים בציר.</p>'}`;
+  if(M)h+=`<h4>מאסטר (בייצוא האחרון)</h4><table class="mt"><tr><td>לפני / אחרי</td><td class="nv">${f1(M.before)} → ${f1(M.after)} LUFS</td></tr><tr><td>True Peak לפני / אחרי</td><td class="nv">${f1(M.tpBefore)} → ${f1(M.tpAfter)} dBTP</td></tr><tr><td>לימיטר</td><td class="nv">${M.limHits?`עבד על ${M.limHits} דגימות, עד ${f1(M.maxGr)} dB`:'לא נדרש'}</td></tr></table>`;
+  h+=`<p class="note">ניתוח אחרון: ${L.time}, ${L.ms}ms. הפירוט המלא נרשם גם בקונסולה (F12).</p>`;$('#mixrep').innerHTML=h}
+  $('#mixset').innerHTML=MSET.map(([k,n,st])=>`<label>${n}<input type="number" step="${st}" data-m="${k}" value="${P[k]}" dir="ltr"></label>`).join('')+`<label class="ck"><input type="checkbox" data-m="master"${P.master?' checked':''}> מאסטר אוטומטי (LUFS + לימיטר)</label><button class="sm ghost" id="mixreset" type="button">ערכי ברירת מחדל</button>`}
+$('#mixb').onclick=async()=>{renderMixRep();$('#mixd').showModal();if(calDirty||!MLOG){$('#mixrep').innerHTML='<p class="mut">מנתח…</p>';try{await ensureCal()}catch(e){toast('הניתוח נכשל: '+e.message)}renderMixRep()}};
+$('#mixcl').onclick=()=>$('#mixd').close();
+$('#mixcal').onclick=async()=>{markDirty();$('#mixrep').innerHTML='<p class="mut">מנתח…</p>';await ensureCal();renderMixRep();live()};
+$('#mixset').addEventListener('change',ev=>{const k=ev.target.dataset.m;if(ev.target.id==='mixreset'){S.mix=MIX0()}else if(k){S.mix=mixP();S.mix[k]=ev.target.type==='checkbox'?ev.target.checked:+ev.target.value}markDirty();save();recalc();layoutTL(true)});
+$('#mixset').addEventListener('click',async ev=>{if(ev.target.id==='mixreset'){S.mix=MIX0();markDirty();save();await ensureCal();renderMixRep()}});
+$('#mixpre').onclick=async()=>{await ensureCal();const vs=CAL.speech[0]?.[0],P=mixP();if(vs==null){toast('אין קריינות');return}const d=P.preSec-vs;if(d<=0.05){toast('הקריינות כבר מתחילה אחרי '+P.preSec+' ש׳');return}
+  pushUndo();for(const c of S.clips)if(c.aw==null&&!c.full&&roleOf(trk(c.track))!=='music')c.start+=d;afterEdit();await ensureCal();renderMixRep();toast(`כל הקליפים זזו ${f1(d)} ש׳ קדימה`)};
 
 /* ================= שמירה ופרויקטים ================= */
 let dbp=null;

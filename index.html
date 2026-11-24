@@ -382,7 +382,7 @@ function total(){let t=10;for(const c of S.clips)t=Math.max(t,ce(c));for(const o
 const ROLE={voice:'voice',bg:'music',amb:'music',fx:'sfx',other:'sfx'};
 const ROLE_T={voice:'קריינות',music:'מוזיקה ואווירה',sfx:'אפקטים'};
 const roleOf=t=>ROLE[t?.kind]||'sfx';
-const MIX0=()=>({voiceLufs:-16,underDb:18,riseDb:7,holdSec:3.5,downSec:1.5,upSec:2.75,wet:0.2,masterLufs:-15,tp:-1,preSec:6,postSec:18,master:true});
+const MIX0=()=>({voiceLufs:-16,underDb:18,riseDb:7,holdSec:3.5,downSec:1.5,upSec:2.75,wet:0.2,masterLufs:-15,tp:-1,preSec:6,postSec:18,master:true,cooldown:12,safety:0.6});
 const mixP=()=>Object.assign(MIX0(),S.mix||{});
 const dB=x=>Math.pow(10,x/20),todB=g=>20*Math.log10(Math.max(g,1e-9));
 function audible(t){return S.tracks.some(x=>x.solo)?t.solo:!t.mute}
@@ -432,9 +432,32 @@ async function renderPart(opt,sr=22050,ch=2){recalc();const T=total(),c=new Offl
 function frames(buf,win=0.02){const d=buf.getChannelData(0),sr=buf.sampleRate,F=Math.floor(sr*win),n=Math.floor(d.length/F),E=new Float32Array(n);
   for(let i=0;i<n;i++){let s=0;for(let j=i*F;j<(i+1)*F;j++)s+=d[j]*d[j];E[i]=todB(Math.sqrt(s/F))}return E}
 const pct=(a,q)=>{const s=[...a].filter(isFinite).sort((x,y)=>x-y);return s.length?s[Math.min(s.length-1,Math.floor(q*s.length))]:-120};
-function detectSpeech(buf){const E=frames(buf,0.02),floor=pct(E,0.1),peak=pct(E,0.95),thr=Math.max(floor+10,peak-35),R=[];let a=-1;
-  for(let i=0;i<=E.length;i++){const on=i<E.length&&E[i]>thr;if(on&&a<0)a=i;if(!on&&a>=0){R.push([a*0.02,i*0.02]);a=-1}}
-  const M=[];for(const r of R){const l=M[M.length-1];if(l&&r[0]-l[1]<0.3)l[1]=r[1];else M.push([...r])}return{regions:M.filter(r=>r[1]-r[0]>=0.12),floor,peak,thr}}
+/* VAD מדורג: שני ספים (היסטרזיס) + השהיית כיבוי של 250ms, כדי לא לפצל מילה או נשימה */
+function detectSpeech(buf){const E=frames(buf,0.02),floor=pct(E,0.1),peak=pct(E,0.95),hi=Math.max(floor+12,peak-30),lo=Math.max(floor+6,peak-38),R=[];let a=-1,quiet=0;
+  for(let i=0;i<=E.length;i++){const e=i<E.length?E[i]:-999;if(a<0){if(e>hi){a=i;quiet=0}}else{if(e<lo){quiet++;if(quiet>=13||i===E.length){R.push([a*0.02,(i-quiet+1)*0.02]);a=-1;quiet=0}}else quiet=0}}
+  const M=[];for(const r of R){const l=M[M.length-1];if(l&&r[0]-l[1]<0.3)l[1]=r[1];else M.push([...r])}return{regions:M.filter(r=>r[1]-r[0]>=0.12),floor,peak,thr:hi,lo}}
+function mergeRegions(L){const s2=L.filter(r=>r&&r[1]>r[0]).map(r=>[...r]).sort((x,y)=>x[0]-y[0]),M=[];for(const r of s2){const l=M[M.length-1];if(l&&r[0]-l[1]<0.15)l[1]=Math.max(l[1],r[1]);else M.push(r)}return M}
+/* מפת דיבור: VAD + חותמות הזמן של התמלול כעוגן */
+function speechMap(){recalc();const w=WT.filter(Boolean).map(p=>[p[0]-0.05,p[1]+0.05]);return mergeRegions([...(CAL?.vad||[]),...w])}
+function silenceList(sp){const P=mixP(),G=[];for(let i=0;i<sp.length-1;i++)G.push({a:sp[i][1],b:sp[i+1][0]});if(sp.length)G.push({a:sp[sp.length-1][1],b:sp[sp.length-1][1]+P.postSec,tail:true});
+  return G.map(g=>{const d=g.b-g.a;return{...g,d,cls:g.tail||d>P.holdSec?'long':d>=1.8?'medium':'short'}}).filter(g=>g.d>0.05)}
+const SIL_T={long:'שתיקה ארוכה',medium:'שתיקה בינונית',short:'שתיקה קצרה'};
+/* מיקום אפקט: אחרי סוף דיבור + מרווח ביטחון, לפי סוג השתיקה, עם Cooldown בין אפקטים */
+function planSfx(o,c,placed){const P=mixP(),sp=speechMap(),gaps=silenceList(sp);const kw=o.w0!=null&&WT[o.w0];const t0=kw?WT[o.w0][0]:(+o.at||cur);
+  const gentle=o.type==='oneshot'&&o.intensity!=='present',need=Math.min(c.len,1.2),log=[];
+  if(!sp.length)return{t:t0,reason:kw?'מילת מפתח':'ציר זמן',sil:null,deferred:false,why:'אין קריינות לזיהוי שתיקות'};
+  for(const g of gaps){if(g.b<=t0+0.1)continue;if(g.a-t0>30)break;
+    if(g.cls==='short'){log.push(`שתיקה קצרה ב-${fmt0(g.a)} (${g.d.toFixed(1)} ש׳)`);continue}
+    if(g.cls==='medium'&&!gentle){log.push(`שתיקה בינונית ב-${fmt0(g.a)} מתאימה רק לאפקט עדין`);continue}
+    let t=Math.max(g.a+P.safety,t0);
+    for(const x of placed){if(Math.abs(t-x)<P.cooldown){const nt=x+P.cooldown;if(nt>t){log.push(`Cooldown מאפקט ב-${fmt0(x)}`);t=nt}}}
+    if(t<g.a+P.safety)t=g.a+P.safety;
+    if(g.b-t<need){log.push(`תחילת דיבור קרובה ב-${fmt0(g.b)}`);continue}
+    return{t,reason:SIL_T[g.cls]+(kw?' אחרי מילת מפתח':''),sil:g.d,deferred:log.length>0,why:log.join(' · ')}}
+  return{t:t0,reason:kw?'מילת מפתח (בלי שתיקה מתאימה)':'ציר זמן',sil:null,deferred:log.length>0,why:(log.join(' · ')+(log.length?' · ':'')+'לא נמצאה שתיקה מתאימה ב-30 ש׳, האפקט נשאר על המילה').trim()}}
+function sfxPlaced(ex){return S.clips.filter(x=>x!==ex&&SRC[x.src]&&roleOf(trk(x.track))==='sfx').map(x=>x.start)}
+function applyPlan(c,o,pl){if(o.w0!=null&&WT[o.w0]){c.aw=o.w0;c.ao=pl.t-WT[o.w0][0];c.start=pl.t}else{c.aw=null;c.start=pl.t}c.place={...pl,at:Date.now()};
+  console.log(`[מיקס] אפקט ${o.n} "${o.label}" → ${fmt(pl.t)} · ${pl.reason}${pl.sil!=null?` · שתיקה ${pl.sil.toFixed(1)} ש׳`:''}${pl.deferred?` · נדחה: ${pl.why}`:''}`)}
 async function lufs(buf){const c=new OfflineAudioContext(buf.numberOfChannels,buf.length,buf.sampleRate),s=c.createBufferSource();s.buffer=buf;
   const f1=bq(c,'highshelf',1681.97,null,4),f2=bq(c,'highpass',38.13,0.5003);s.connect(f1);f1.connect(f2);f2.connect(c.destination);s.start();const k=await c.startRendering();
   const H=Math.floor(k.sampleRate*0.1),nh=Math.floor(k.length/H),hp=new Float64Array(nh);
@@ -459,7 +482,7 @@ function markDirty(){calDirty=true}
 function ensureCal(){if(!calDirty&&CAL)return Promise.resolve(CAL);if(!calP)calP=calibrate().finally(()=>{calP=null});return calP}
 async function calibrate(){const P=mixP(),t0=performance.now(),log={time:new Date().toLocaleTimeString('he-IL')},cal={thr:-24,voiceGain:1,musicGain:dB(-20),speech:[],log};
   recalc();const has=r=>S.clips.some(c=>SRC[c.src]&&audible(trk(c.track))&&roleOf(trk(c.track))===r);
-  if(has('voice')){const raw=await renderPart({roles:['voice'],chain:false});const sd=detectSpeech(raw);cal.speech=sd.regions;
+  if(has('voice')){const raw=await renderPart({roles:['voice'],chain:false});const sd=detectSpeech(raw);cal.vad=sd.regions;recalc();cal.speech=mergeRegions([...sd.regions,...WT.filter(Boolean).map(p=>[p[0]-0.05,p[1]+0.05])]);log.vadCount=sd.regions.length;log.wordAnchors=WT.filter(Boolean).length;
     const E=frames(raw,0.05).filter(x=>x>sd.thr);cal.thr=clamp(pct(E,0.9),-50,-6);
     log.voiceRaw=await lufs(raw);const proc=await renderPart({roles:['voice'],chain:true,cal:{...cal,voiceGain:1}});const Lp=await lufs(proc);
     cal.voiceGain=isFinite(Lp)?clamp(dB(P.voiceLufs-Lp),dB(-24),dB(30)):1;log.voiceProc=Lp;log.voiceTarget=P.voiceLufs;log.voiceGainDb=todB(cal.voiceGain);log.thr=cal.thr;
@@ -469,8 +492,9 @@ async function calibrate(){const P=mixP(),t0=performance.now(),log={time:new Dat
   const sp=cal.speech;log.speechCount=sp.length;log.voiceStart=sp[0]?.[0];log.voiceEnd=sp[sp.length-1]?.[1];
   log.silences=[];for(let i=0;i<sp.length-1;i++){const g=sp[i+1][0]-sp[i][1];if(g>=P.holdSec)log.silences.push([sp[i][1],sp[i+1][0]])}
   const fx=S.clips.filter(c=>SRC[c.src]&&roleOf(trk(c.track))==='sfx').sort((a,b)=>a.start-b.start);
+  const gl=silenceList(cal.speech);log.silShort=gl.filter(g=>g.cls==='short').length;log.silMed=gl.filter(g=>g.cls==='medium').length;log.silLong=gl.filter(g=>g.cls==='long'&&!g.tail).length;
   log.sfx=fx.map(c=>{let near=null;for(const p of WT){if(!p)continue;const d=c.start-p[0];if(Math.abs(d)<Math.abs(near??99))near=d}
-    const ov=fx.filter(o=>o!==c&&o.start<ce(c)-effFades(c).fo&&c.start<ce(o)-effFades(o).fo).length;return{label:c.label,t:c.start,len:c.len,near,ov}});
+    const ov=fx.filter(o=>o!==c&&o.start<ce(c)-effFades(c).fo&&c.start<ce(o)-effFades(o).fo).length;const nx=cal.speech.find(r=>r[0]>=c.start-0.01),pv=[...cal.speech].reverse().find(r=>r[1]<=c.start+0.01);return{label:c.label,t:c.start,len:c.len,near,ov,place:c.place||null,after:pv?c.start-pv[1]:null,before:nx?nx[0]-c.start:null}});
   log.ms=Math.round(performance.now()-t0);cal.log=log;CAL=cal;calDirty=false;MLOG={...MLOG,cal:log};console.groupCollapsed('[מיקס] כיול');console.table(log.sfx);console.log(log);console.groupEnd();return cal}
 
 /* ================= אודיו: ניגון וייצוא ================= */
@@ -633,7 +657,7 @@ inner.addEventListener('pointerdown',ev=>{if(ev.button!==0)return;const r0=inner
       else{c.len=clamp(t-st0,0.05,c.loop?3600:dur-in0)}c.full=false;renderOverlay();drawWave()},()=>{if(moved)afterEdit()});return}
   if(c&&ev.target.closest('.chd')){let moved=false;const st0=c.start;selClip=c.id;S.selTrack=c.track;
     drag(e=>{const dx=xOf(e)-x;if(!moved&&Math.abs(dx)<3&&Math.abs(yOf(e)-y)<3)return;if(!moved){pushUndo();moved=true}
-      setStart(c,Math.max(0,st0-dx/S.pps));c.full=false;const r=rowAtY(yOf(e));if(r&&r.t&&r.t.id!==c.track)c.track=r.t.id;renderOverlay();drawWave()},
+      setStart(c,Math.max(0,st0-dx/S.pps));c.full=false;if(c.place)c.place={...c.place,reason:'הוזז ידנית',deferred:false,why:''};const r=rowAtY(yOf(e));if(r&&r.t&&r.t.id!==c.track)c.track=r.t.id;renderOverlay();drawWave()},
       ()=>{if(moved)afterEdit();else{seekTo(Math.max(0,t0));layoutTL(true)}});return}
   const sen=ev.target.closest('.sen');if(sen){const si=+sen.dataset.s,s=S.sentences[si];let moved=false;const orig=S.words.slice(s.a,s.b+1).map(w=>[w.s,w.e]);
     const lo=si>0?S.words[S.sentences[si-1].b].e:0,hi=si<S.sentences.length-1?S.words[S.sentences[si+1].a].s:1e9;
@@ -832,10 +856,12 @@ function placeOrderFile(o,id){recalc();const buf=SRC[id].buf,[st,en]=orderSpan(o
   if(c){c.src=id;c.in=0;if(!a)c.len=buf.duration;c.label=o.label}
   else{c=newClip({track:o.track,src:id,start:st,len:a?en-st:buf.duration,loop:a,gain:o.type==='background'?0.35:a?0.5:0.8,fi:a?3:0,fo:a?4:0.4,label:o.label,order:o.id,full:o.type==='background'});
     if(o.w0!=null&&WT[o.w0]){c.aw=o.w0;c.ao=0;
-      if(!a){const gap=WT[o.w0][0]-(o.w0>0&&WT[o.w0-1]?WT[o.w0-1][1]:WT[o.w0][0]-1);c.ao=-Math.min(0.35,Math.max(0.15,gap*0.7))}}
-    if(!a){recalc();if(c.aw!=null)c.start=WT[c.aw][0]+c.ao;for(let k=0;k<4;k++){const hit=S.clips.find(x=>x!==c&&SRC[x.src]&&roleOf(trk(x.track))==='sfx'&&x.start<c.start+1.2&&c.start<ce(x)-effFades(x).fo);if(!hit)break;setStart(c,Math.max(c.start,hit.start)+1.5);c.note='הוזז 1.5 ש׳ כדי לא לחפוף אפקט אחר'}}
-    S.clips.push(c);o.clip=c.id}}
-async function orderFile(o,f){try{const id=await addSource(f,f.name);pushUndo();placeOrderFile(o,id);afterEdit();toast(`אפקט ${o.n} נכנס לציר`)}catch(e){toast('לא הצלחתי לקרוא את הקובץ')}}
+    }
+    S.clips.push(c);o.clip=c.id;if(!a&&roleOf(trk(c.track))==='sfx'){recalc();applyPlan(c,o,planSfx(o,c,sfxPlaced(c)))}}}
+async function autoPlaceAll(){await ensureCal();pushUndo();recalc();const L=S.orders.map(o=>({o,c:o.clip&&S.clips.find(x=>x.id===o.clip)})).filter(x=>x.c&&SRC[x.c.src]&&!isAmb(x.o)&&roleOf(trk(x.c.track))==='sfx')
+    .sort((x,y)=>(x.o.w0!=null&&WT[x.o.w0]?WT[x.o.w0][0]:+x.o.at||0)-(y.o.w0!=null&&WT[y.o.w0]?WT[y.o.w0][0]:+y.o.at||0));const done=[];
+  for(const{o,c}of L){const pl=planSfx(o,c,done);applyPlan(c,o,pl);done.push(pl.t)}afterEdit();return L.length}
+async function orderFile(o,f){try{const id=await addSource(f,f.name);await ensureCal().catch(()=>{});pushUndo();placeOrderFile(o,id);afterEdit();toast(`אפקט ${o.n} נכנס לציר`)}catch(e){toast('לא הצלחתי לקרוא את הקובץ')}}
 function orderCard(o){const[st,en]=orderSpan(o),g=gen(o),T=trk(o.track),done=!!o.clip&&S.clips.some(c=>c.id===o.clip),q=ctxWords(o);
   return`<article class="oc${hl===o.id?' hl':''}" data-id="${o.id}" style="--c:${KIND_C[T?.kind||'fx']}">
   <header><span class="num">${o.n}</span><div><b>${esc(o.label)}</b><small>${TN[o.type]} · שכבת ${esc(T?.name||'')} · ${fmt0(st)}${isAmb(o)?'–'+fmt0(en):''}</small></div><span class="chip g">${esc(o.origin)}</span><span class="chip ${done?'ok':'wait'}">${done?'בציר':'ממתין לקובץ'}</span></header>
@@ -869,7 +895,7 @@ async function sfxGenerate(o){const g=gen(o),model=LS.get('medi.sfxmodel','eleve
 async function genOrder(o,btn,quiet){if(!xikey()){toast('צריך מפתח API של ElevenLabs בהגדרות');openSettings();return false}
   if(!(o.en||'').trim()){toast(`להזמנה ${o.n} אין תיאור באנגלית`);return false}
   const old=btn?.textContent;if(btn){btn.disabled=true;btn.textContent='יוצר…'}
-  try{const f=await sfxGenerate(o);const id=await addSource(f,o.label+' · גרסה '+((o.vars||[]).length+1));pushUndo();o.vars=[...(o.vars||[]),id];
+  try{const f=await sfxGenerate(o);const id=await addSource(f,o.label+' · גרסה '+((o.vars||[]).length+1));await ensureCal().catch(()=>{});pushUndo();o.vars=[...(o.vars||[]),id];
     const has=o.clip&&S.clips.some(c=>c.id===o.clip);if(!has)placeOrderFile(o,id);afterEdit();if(!quiet)toast(has?`גרסה חדשה מוכנה לאפקט ${o.n}. לוחצים "בחירה" כדי להכניס אותה לציר`:`אפקט ${o.n} נוצר ונכנס לציר`);return true}
   catch(e){toast(`אפקט ${o.n}: `+(e.message==='Failed to fetch'?'אין חיבור ל-ElevenLabs':e.message));return false}
   finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=old}}}
@@ -945,7 +971,7 @@ $('#vgo').onclick=async()=>{const st=$('#vst'),bt=$('#vgo');bt.disabled=true;sto
   catch(e){st.textContent='יצירת הווידאו נכשלה: '+e.message}finally{bt.disabled=false}};
 
 /* ================= דוח מיקס ================= */
-const MSET=[['voiceLufs','קריינות (LUFS)',1],['underDb','מוזיקה מתחת לקול בזמן דיבור (dB)',1],['riseDb','עליית מוזיקה בשתיקה (dB)',1],['holdSec','שתיקה לפני עלייה (ש׳)',0.1],['downSec','זמן ירידה לפני דיבור (ש׳)',0.1],['upSec','זמן עלייה בשתיקה (ש׳)',0.1],['wet','Reverb לאפקטים (0–1)',0.05],['preSec','מוזיקה לבד בפתיחה (ש׳)',1],['postSec','מוזיקה לבד בסיום (ש׳)',1],['masterLufs','מאסטר (LUFS)',0.5],['tp','תקרת True Peak (dBTP)',0.1]];
+const MSET=[['voiceLufs','קריינות (LUFS)',1],['underDb','מוזיקה מתחת לקול בזמן דיבור (dB)',1],['riseDb','עליית מוזיקה בשתיקה (dB)',1],['holdSec','שתיקה לפני עלייה (ש׳)',0.1],['downSec','זמן ירידה לפני דיבור (ש׳)',0.1],['upSec','זמן עלייה בשתיקה (ש׳)',0.1],['wet','Reverb לאפקטים (0–1)',0.05],['preSec','מוזיקה לבד בפתיחה (ש׳)',1],['postSec','מוזיקה לבד בסיום (ש׳)',1],['cooldown','מרווח מינימלי בין אפקטים (ש׳)',1],['safety','מרווח ביטחון אחרי דיבור (ש׳)',0.1],['masterLufs','מאסטר (LUFS)',0.5],['tp','תקרת True Peak (dBTP)',0.1]];
 const f1=v=>v==null||!isFinite(v)?'—':(Math.round(v*10)/10).toString();
 function renderMixRep(){const P=mixP(),L=MLOG?.cal,M=MLOG?.master;let h='';
   if(!L){$('#mixrep').innerHTML='<p class="mut">עוד לא בוצע ניתוח. לוחצים "ניתוח מחדש".</p>';}
@@ -953,15 +979,16 @@ function renderMixRep(){const P=mixP(),L=MLOG?.cal,M=MLOG?.master;let h='';
      <tr><td>הגברה לכיול</td><td class="nv">${f1(L.voiceGainDb)} dB → ${f1(L.voiceTarget)} LUFS</td></tr><tr><td>סף הקומפרסור (אחוזון 90 של הדיבור)</td><td class="nv">${f1(L.thr)} dBFS</td></tr>
      <tr><td>רצפת רעש / סף זיהוי דיבור</td><td class="nv">${f1(L.noiseFloor)} / ${f1(L.speechThr)} dBFS</td></tr></table>
     <h4>מוזיקה ואווירה</h4><table class="mt"><tr><td>עוצמה מקורית (אחרי EQ Carving 2.5kHz −3.5dB)</td><td class="nv">${f1(L.musicRaw)} LUFS</td></tr><tr><td>בזמן דיבור / בשתיקה ארוכה</td><td class="nv">${f1(L.musicDucked)} / ${f1(L.musicOpen)} LUFS</td></tr></table>
-    <h4>תזמונים</h4><table class="mt"><tr><td>קטעי דיבור שזוהו</td><td class="nv">${L.speechCount}</td></tr><tr><td>תחילת קריינות / סיום</td><td class="nv">${f1(L.voiceStart)} / ${f1(L.voiceEnd)} ש׳</td></tr>
+    <h4>תזמונים</h4><table class="mt"><tr><td>קטעי דיבור (VAD + עוגני תמלול)</td><td class="nv">${L.speechCount} · VAD ${L.vadCount??'—'} · ${L.wordAnchors??0} מילים</td></tr><tr><td>שתיקות קצרות / בינוניות / ארוכות</td><td class="nv">${L.silShort??0} / ${L.silMed??0} / ${L.silLong??0}</td></tr><tr><td>תחילת קריינות / סיום</td><td class="nv">${f1(L.voiceStart)} / ${f1(L.voiceEnd)} ש׳</td></tr>
      ${L.voiceStart!=null&&L.voiceStart<P.preSec-0.3?`<tr><td class="wn">פתיחה</td><td class="wn">הקריינות מתחילה לפני ${P.preSec} ש׳, אז המוזיקה לא מספיקה להיכנס לבד. אפשר ללחוץ "הזזת הקריינות".</td></tr>`:''}
      <tr><td>שתיקות ארוכות (המוזיקה עולה)</td><td class="nv">${L.silences.length?L.silences.map(([a,b])=>`${fmt0(a)}–${fmt0(b)}`).join(' · '):'אין'}</td></tr></table>
-    <h4>אפקטים</h4>${L.sfx.length?`<table class="mt">${L.sfx.map(x=>`<tr><td>${esc(x.label||'אפקט')}</td><td class="nv">${fmt(x.t)} · ${f1(x.len)} ש׳${x.near!=null?` · ${x.near<0?f1(-x.near)+' ש׳ לפני':f1(x.near)+' ש׳ אחרי'} מילה`:''}${x.ov?` <span class="wn">· חופף ל-${x.ov} אפקטים</span>`:''}${x.near!=null&&Math.abs(x.near)<0.08?' <span class="wn">· נכנס בדיוק על מילה</span>':''}</td></tr>`).join('')}</table>`:'<p class="mut">אין אפקטים בציר.</p>'}`;
+    <h4>אפקטים</h4>${L.sfx.length?`<table class="mt"><tr><td><b>אפקט</b></td><td class="nv"><b>זמן · סיבה · שקט סמוך · דחייה</b></td></tr>${L.sfx.map(x=>{const p=x.place;return`<tr><td>${esc(x.label||'אפקט')}</td><td class="nv">${fmt(x.t)} · ${p?esc(p.reason):'ידני / ישן'}${p&&p.sil!=null?` · שתיקה של ${f1(p.sil)} ש׳`:''} · ${f1(x.after)} ש׳ אחרי דיבור${x.before!=null?`, ${f1(x.before)} ש׳ עד הדיבור הבא`:''}${p&&p.deferred?`<br><span class="wn">נדחה: ${esc(p.why)}</span>`:p&&p.why?`<br><span class="mut">${esc(p.why)}</span>`:''}${x.ov?` <span class="wn">· חופף ל-${x.ov}</span>`:''}${x.after!=null&&x.after<mixP().safety-0.05&&!(x.before!=null&&x.before>0)?'':''}</td></tr>`}).join('')}</table><div class="row"><button class="sm" id="mixauto">סידור אוטומטי של כל האפקטים לפי הכללים</button></div>`:'<p class="mut">אין אפקטים בציר.</p>'}`;
   if(M)h+=`<h4>מאסטר (בייצוא האחרון)</h4><table class="mt"><tr><td>לפני / אחרי</td><td class="nv">${f1(M.before)} → ${f1(M.after)} LUFS</td></tr><tr><td>True Peak לפני / אחרי</td><td class="nv">${f1(M.tpBefore)} → ${f1(M.tpAfter)} dBTP</td></tr><tr><td>לימיטר</td><td class="nv">${M.limHits?`עבד על ${M.limHits} דגימות, עד ${f1(M.maxGr)} dB`:'לא נדרש'}</td></tr></table>`;
   h+=`<p class="note">ניתוח אחרון: ${L.time}, ${L.ms}ms. הפירוט המלא נרשם גם בקונסולה (F12).</p>`;$('#mixrep').innerHTML=h}
   $('#mixset').innerHTML=MSET.map(([k,n,st])=>`<label>${n}<input type="number" step="${st}" data-m="${k}" value="${P[k]}" dir="ltr"></label>`).join('')+`<label class="ck"><input type="checkbox" data-m="master"${P.master?' checked':''}> מאסטר אוטומטי (LUFS + לימיטר)</label><button class="sm ghost" id="mixreset" type="button">ערכי ברירת מחדל</button>`}
 $('#mixb').onclick=async()=>{renderMixRep();$('#mixd').showModal();if(calDirty||!MLOG){$('#mixrep').innerHTML='<p class="mut">מנתח…</p>';try{await ensureCal()}catch(e){toast('הניתוח נכשל: '+e.message)}renderMixRep()}};
 $('#mixcl').onclick=()=>$('#mixd').close();
+$('#mixrep').addEventListener('click',async ev=>{if(ev.target.id!=='mixauto')return;$('#mixrep').innerHTML='<p class="mut">ממקם…</p>';const n=await autoPlaceAll();await ensureCal();renderMixRep();toast(`${n} אפקטים מוקמו מחדש`)});
 $('#mixcal').onclick=async()=>{markDirty();$('#mixrep').innerHTML='<p class="mut">מנתח…</p>';await ensureCal();renderMixRep();live()};
 $('#mixset').addEventListener('change',ev=>{const k=ev.target.dataset.m;if(ev.target.id==='mixreset'){S.mix=MIX0()}else if(k){S.mix=mixP();S.mix[k]=ev.target.type==='checkbox'?ev.target.checked:+ev.target.value}markDirty();save();recalc();layoutTL(true)});
 $('#mixset').addEventListener('click',async ev=>{if(ev.target.id==='mixreset'){S.mix=MIX0();markDirty();save();await ensureCal();renderMixRep()}});
